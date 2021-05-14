@@ -2,4 +2,4 @@
 ### Author: Yujia Ding, Henry Schellhorn
 ### ArXiv:
 
-This repo is to generate the utility plot (Figure 1) in the low infection regime with constant treatment under constrained control.
+This repo is to generate the utility plot (Figure 2) in the low infection regime with constant treatment under constrained control.

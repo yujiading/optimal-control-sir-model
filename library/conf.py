@@ -13,6 +13,7 @@ Ss = np.array(data['S(t)'])
 
 dIs = Is[1:] - Is[:-1]
 dSs = Ss[1:] - Ss[:-1]
+dXs = Xs[1:] - Xs[:-1]
 length = len(Is)
 alpha_fix = 0.25
 
@@ -35,14 +36,16 @@ k1_bar = 0.4612  # 4 # Long run value of recovery rate
 # k1_bar = 6  # 4 # Long run value of recovery rate
 
 
-sigma_x = sigma_k / sigma  # needs to be negative
-lambda_x = lambda_k
-mu = K0 + mu0
-X_bar = (mu - mu1 - k1_bar) / sigma  # long run impact of the treatment risk
-
 # new parameters
 beta = 0.025  # constant transmission rate  1.5-3.5
 # https://www.statista.com/statistics/1103196/worldwide-infection-rate-of-major-virus-outbreaks/
 sigma_s = 1.5  # Volatility of the measurement of today’s susceptible rate
 dt = 0.001
-eps = 0.01
+eps_low = 0.01  # 0.01, 0.1 # initial I
+eps_moderate = 0.299292553  # 0.2, 0.1 0.299292553
+
+sigma_x = sigma_k / sigma  # needs to be negative
+lambda_x = lambda_k
+mu = K0 + mu0
+X_bar = (mu - mu1 - k1_bar) / sigma  # long run impact of the treatment risk
+r = beta - mu

@@ -17,12 +17,12 @@ def test_I_star_low_const_utility():
 
         cla_alpha = AlphaStarLowConst(gamma=gamma)
         alpha_star = cla_alpha.alpha_star
-        cla_I = IStarLowConst(alpha_star=alpha_star, eps=conf.eps)
+        cla_I = IStarLowConst(alpha_star=alpha_star)
         I_star = cla_I.I_star
         U_star = -I_star ** (1 - gamma) / (1 - gamma)
         U['Optimal Control'] = U_star
 
-        cla_I_full = IStarLowConst(alpha_star=1, eps=conf.eps)
+        cla_I_full = IStarLowConst(alpha_star=1)
         I_full = cla_I_full.I_star
         U_full = -I_full ** (1 - gamma) / (1 - gamma)
         U['Full Control'] = U_full
@@ -55,11 +55,11 @@ def test_I_star_low_const():
 
         cla_alpha = AlphaStarLowConst(gamma=gamma)
         alpha_star = cla_alpha.alpha_star
-        cla_I = IStarLowConst(alpha_star=alpha_star, eps=conf.eps)
+        cla_I = IStarLowConst(alpha_star=alpha_star)
         I_star = cla_I.I_star
         I['Optimal Control'] = I_star
 
-        cla_I_full = IStarLowConst(alpha_star=1, eps=conf.eps)
+        cla_I_full = IStarLowConst(alpha_star=1)
         I_full = cla_I_full.I_star
         I['Full Control'] = I_full
 

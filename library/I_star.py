@@ -30,6 +30,8 @@ class IStarLowConst:
             ret = ret * I[-1]
             if not isinstance(S, int):
                 ret = ret + Isig1 * (S[i] * I[-1]) ** 0.5 * dB1[i]
+                if ret<=0:
+                    ret = 0.001
             I.append(ret)
         return np.array(I)
 

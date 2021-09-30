@@ -4,7 +4,7 @@ import numpy as np
 from library import conf
 
 
-class SigmaS:
+class SigmaSDoubleSum:
     def __init__(self, scenarios: int = 10000):
         self.scenarios = scenarios
     @property

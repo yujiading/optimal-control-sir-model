@@ -25,6 +25,6 @@ def test_data_low_const():
 
 
 def test_data_low_ou():
-    data = DataLowOU(I0=conf.eps, X0=conf.X0, n_steps=10, n_trials=5)
+    data = DataLowOU(I0=conf.eps, X0=conf.X0, n_steps=20, n_trials=5)
     print(data.Is_trials)
     print(data.Xs_trials)

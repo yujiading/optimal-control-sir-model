@@ -112,7 +112,7 @@ class HFunctions:
         A1 = HFunctions.A_1(tau=tau, gamma=gamma)
         A2 = HFunctions.A_2(tau=tau, gamma=gamma)
         A3 = HFunctions.A_3(tau=tau, gamma=gamma)
-        power = A1 * X_t ** 2 + A2 * X_t + A3 + const
+        power = A1 * X_t ** 2/2 + A2 * X_t + A3 + const
         power = power * i / gamma
         return math.exp(power)
 

@@ -49,15 +49,18 @@ sigma_x = sigma_k / sigma  # needs to be negative
 lambda_x = lambda_k
 mu = K0 + mu0
 X_bar = (mu - mu1 - k1_bar) / sigma  # long run impact of the treatment risk
+# X_bar = -0.0001
 r = beta - mu
 
 # parameters for simulation
 is_simulation = True
 if is_simulation:
     n_steps = 20
-    n_trials = 1000
+    n_trials = 10
     X0 = (K0 + mu0 - mu1 - K1_0) / sigma
     eps = 0.01
-    S0 = 0.8
-    cpu = 3
+    S0 = 0.7
+    cpu = 8
+
+
 

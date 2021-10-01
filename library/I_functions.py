@@ -24,7 +24,7 @@ class IFunctions:
 
     @staticmethod
     def d_B1():
-        SI = conf.Is[:-1] * conf.Ss[:-1]
+        SI = conf.Is[1:] * conf.Ss[1:]
         return (conf.dSs + conf.beta * SI * conf.dt) / conf.sigma_s / (SI) ** 0.5
 
     @staticmethod

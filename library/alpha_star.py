@@ -28,7 +28,7 @@ class AlphaStarLowOU:
             A1 = HFunctions.A_1(gamma=self.gamma, tau=self.T - t)
             A2 = HFunctions.A_2(gamma=self.gamma, tau=self.T - t)
             X = conf.Xs[t]
-            alpha_star_.append(X - conf.sigma_x * (A1 * X + A2) / self.gamma / conf.sigma)
+            alpha_star_.append((X - conf.sigma_x * (A1 * X + A2)) / self.gamma / conf.sigma)
         return np.array(alpha_star_)
 
 

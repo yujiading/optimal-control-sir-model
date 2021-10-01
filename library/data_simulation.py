@@ -94,6 +94,10 @@ class DataLowOU:
     def __init__(self, I0, X0, n_steps: int = 20, n_trials: int = 10000):
         self.X0 = X0
         self.I0 = I0
+        if self.I0 is None:
+            self.I0 = np.random.uniform(conf.eps, 0.1)
+        if self.X0 is None:
+            self.X0 = np.random.uniform(-0.5, 0.5)
         self.n_trials = n_trials
         self.n_steps = n_steps
         self.d_B2_trials = None
@@ -103,12 +107,12 @@ class DataLowOU:
 
     def next_X(self, last_X, last_dB2):
         ret = last_X + conf.lambda_x * (conf.X_bar - last_X) * conf.dt - conf.sigma_x * last_dB2
-        return ret[0]
+        return ret
 
     def next_I(self, last_I, last_X, last_dB2):
         ret = last_I + (conf.r + conf.alpha_fix * conf.sigma * last_X) * last_I * conf.dt \
               + conf.alpha_fix * last_I * conf.sigma * last_dB2
-        return ret[0]
+        return ret
 
     @property
     def get_data_one_trial(self):
@@ -119,14 +123,15 @@ class DataLowOU:
             last_X = Xs[-1]
             last_I = Is[-1]
             while True:
-                last_dB2 = np.random.normal(loc=0, scale=1, size=1)
+                last_dB2 = np.random.normal(loc=0, scale=math.sqrt(conf.dt), size=1)[0]
+                # last_dB2 = np.random.normal(loc=0, scale=conf.dt, size=1)[0]
                 next_X = self.next_X(last_X=last_X, last_dB2=last_dB2)
                 next_I = self.next_I(last_I=last_I, last_X=last_X, last_dB2=last_dB2)
-                if next_X < 0 and (0 <= next_I <= 1) and next_X > -1:
-                    Is.append(next_I)
-                    Xs.append(next_X)
-                    dB2.append(last_dB2)
-                    break
+                # if next_X < 0 and (0 <= next_I <= 1) and next_X > -1:
+                Is.append(next_I)
+                Xs.append(next_X)
+                dB2.append(last_dB2)
+                break
         return Is, Xs, dB2
 
     def get_data(self):

@@ -40,7 +40,7 @@ k1_bar = 0.4612  # 4 # Long run value of recovery rate
 # new parameters
 beta = 0.025  # constant transmission rate  1.5-3.5
 # https://www.statista.com/statistics/1103196/worldwide-infection-rate-of-major-virus-outbreaks/
-sigma_s = 1.5  # Volatility of the measurement of today’s susceptible rate
+sigma_s = 2.17  # Volatility of the measurement of today’s susceptible rate
 dt = 0.001
 eps_low = 0.01  # 0.01, 0.1 # initial I
 eps_moderate = 0.01

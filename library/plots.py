@@ -10,7 +10,7 @@ from tqdm import tqdm
 from library import conf
 from library.I_star import IStarLowConst, IStarLowOU, IStarModerateOU, IStarModerateConst
 from library.alpha_star import AlphaStarLowConst, AlphaStarLowOU, AlphaStarModerateOU, AlphaStarModerateConst
-from library.data_simulation import DataModerateOU
+from library.data_simulation import DataModerateOU, DataModerateConst, DataLowOU, DataLowConst
 
 
 class Plots:
@@ -257,7 +257,7 @@ class Plots:
                 I_star_moderate_const = I_star_moderate_const / conf.n_trials
                 I_full_moderate_const = I_full_moderate_const / conf.n_trials
 
-            I_no = conf.Is
+            I_no = np.sum(data_ou.Is_trials, axis=0) / conf.n_trials
             I['Optimal Control with Constant Treatment'] = I_star_moderate_const
             I['Optimal Control with OU Treatment'] = I_star_moderate_OU
             I['Full Control with Constant Treatment'] = I_full_moderate_const
@@ -335,6 +335,160 @@ class Plots:
             fig.subplots_adjust(left=0.1, bottom=0.2, right=0.95, top=0.9, wspace=0.3, hspace=0.4)
             fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
             plt.suptitle('Expected Utility of Moderate Infection Regime: $E-\\frac{I(t)^{1-\\gamma}}{1-\\gamma}$',
+                         x=0.5)
+            plt.show()
+
+    @staticmethod
+    def I_star_low_infection_expect_parallel_helper(idx, data_ou, gamma, T):
+        conf.Xs = data_ou.Xs_trials[idx]
+        conf.Is = data_ou.Is_trials[idx]
+        conf.length = len(conf.Is)
+        conf.dIs = conf.Is[1:] - conf.Is[:-1]
+        conf.dXs = conf.Xs[1:] - conf.Xs[:-1]
+
+        I_star_low_OU_, I_full_low_OU_ = Plots.get_I_star_I_full_low_OU(gamma=gamma, T=T)
+
+        # conf.Xs = data_const.Xs_trials[idx]
+        # conf.Ss = data_const.Ss_trials[idx]
+        # conf.Is = data_const.Is_trials[idx]
+        # conf.length = len(conf.Is)
+        # conf.dIs = conf.Is[1:] - conf.Is[:-1]
+        # conf.dSs = conf.Ss[1:] - conf.Ss[:-1]
+        # conf.dXs = conf.Xs[1:] - conf.Xs[:-1]
+        I_star_low_const_, I_full_low_const_ = Plots.get_I_star_I_full_low_const(gamma=gamma)
+        return I_star_low_OU_, I_full_low_OU_, I_star_low_const_, I_full_low_const_
+
+    @staticmethod
+    def I_star_low_infection_expect(is_plot_ultility: bool, T):
+        gammas = [-1, -2, -3, -4, -5]
+        # gammas = [-6, -7, -8, -9, -10]
+        # gammas = [-1, -2]
+
+        data_ou = DataLowOU(I0=conf.eps, X0=conf.X0, n_steps=conf.n_steps, n_trials=conf.n_trials)
+        # data_const = DataLowConst(I0=conf.eps, S0=conf.S0, n_steps=conf.n_steps, n_trials=conf.n_trials)
+        II = []
+        II_ultility = []
+        for i in range(len(gammas)):
+            gamma = gammas[i]
+            I = pd.DataFrame()
+            I_ultility = pd.DataFrame()
+            paralell = True
+            if paralell:
+                trials = list(range(conf.n_trials))
+                with Pool(conf.cpu) as p:
+                    ret = list(tqdm(p.imap(partial(Plots.I_star_low_infection_expect_parallel_helper,
+                                                   data_ou=data_ou, gamma=gamma, T=T), trials), total=conf.n_trials))
+                I_star_low_OU, I_full_low_OU, I_star_low_const, I_full_low_const = np.sum(ret,
+                                                                                          axis=0) / conf.n_trials
+            else:
+                I_star_low_OU = 0
+                I_full_low_OU = 0
+                I_star_low_const = 0
+                I_full_low_const = 0
+                for idx in tqdm(range(conf.n_trials)):
+                    conf.Xs = data_ou.Xs_trials[idx]
+                    conf.Is = data_ou.Is_trials[idx]
+                    conf.length = len(conf.Is)
+                    conf.dIs = conf.Is[1:] - conf.Is[:-1]
+                    conf.dXs = conf.Xs[1:] - conf.Xs[:-1]
+
+                    I_star_low_OU_, I_full_low_OU_ = Plots.get_I_star_I_full_low_OU(gamma=gamma, T=T)
+                    I_star_low_OU += I_star_low_OU_
+                    I_full_low_OU += I_full_low_OU_
+
+                    # conf.Xs = data_const.Xs_trials[idx]
+                    # conf.Ss = data_const.Ss_trials[idx]
+                    # conf.Is = data_const.Is_trials[idx]
+                    # conf.length = len(conf.Is)
+                    # conf.dIs = conf.Is[1:] - conf.Is[:-1]
+                    # conf.dSs = conf.Ss[1:] - conf.Ss[:-1]
+                    # conf.dXs = conf.Xs[1:] - conf.Xs[:-1]
+                    I_star_low_const_, I_full_low_const_ = Plots.get_I_star_I_full_low_const(gamma=gamma)
+                    I_star_low_const += I_star_low_const_
+                    I_full_low_const += I_full_low_const_
+                I_star_low_OU = I_star_low_OU / conf.n_trials
+                I_full_low_OU = I_full_low_OU / conf.n_trials
+                I_star_low_const = I_star_low_const / conf.n_trials
+                I_full_low_const = I_full_low_const / conf.n_trials
+
+            I_no = np.sum(data_ou.Is_trials, axis=0) / conf.n_trials
+            I['Optimal Control with Constant Treatment'] = I_star_low_const
+            I['Optimal Control with OU Treatment'] = I_star_low_OU
+            I['Full Control with Constant Treatment'] = I_full_low_const
+            I['Full Control with OU Treatment'] = I_full_low_OU
+            I['No Control'] = I_no
+            II.append(I)
+            if is_plot_ultility:
+                I_ultility_star_low_OU = Plots.utility(I=I_star_low_OU, gamma=gamma)
+                I_ultility_full_low_OU = Plots.utility(I=I_full_low_OU, gamma=gamma)
+                I_ultility_star_low_const = Plots.utility(I=I_star_low_const, gamma=gamma)
+                I_ultility_full_low_const = Plots.utility(I=I_full_low_const, gamma=gamma)
+                I_ultility_no = Plots.utility(I=I_no, gamma=gamma)
+                I_ultility['Optimal Control with Constant Treatment'] = I_ultility_star_low_const
+                I_ultility['Optimal Control with OU Treatment'] = I_ultility_star_low_OU
+                I_ultility['Full Control with Constant Treatment'] = I_ultility_full_low_const
+                I_ultility['Full Control with OU Treatment'] = I_ultility_full_low_OU
+                I_ultility['No Control'] = I_ultility_no
+                II_ultility.append(I_ultility)
+
+        styles = ['C0o-.', 'C1*:', 'C2<-.', 'C3>-.', 'C4^-.', 'C5-', 'C6--']
+        fig, axes = plt.subplots(nrows=len(gammas), ncols=2)
+        for i in range(len(gammas)):
+            gamma = gammas[i]
+            I = II[i]
+            I.plot(ax=axes[i, 0], style=styles, legend=False)
+            axes[i, 0].set_ylabel('$\\gamma=$' + str(gamma))
+            I.plot(ax=axes[i, 1], y=[
+                'Optimal Control with Constant Treatment',
+                'Optimal Control with OU Treatment',
+                'Full Control with Constant Treatment',
+                'Full Control with OU Treatment'],
+                   style=styles, legend=False)
+
+            yfmt = ScalarFormatterForceFormat()
+            yfmt.set_powerlimits((0, 0))
+            axes[i, 0].yaxis.set_major_formatter(yfmt)
+            yfmt = ScalarFormatterForceFormat()
+            yfmt.set_powerlimits((0, 0))
+            axes[i, 1].yaxis.set_major_formatter(yfmt)
+
+        handles, labels = axes[0, 0].get_legend_handles_labels()
+
+        # Format plot
+        fig.set_size_inches(8, 10.5)
+        fig.subplots_adjust(left=0.1, bottom=0.2, right=0.95, top=0.9, wspace=0.3, hspace=0.4)
+        fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
+        plt.suptitle('Expected Infection of Low Infection Regime: $EI$', x=0.5)
+        plt.show()
+        if is_plot_ultility:
+            styles = ['o-.', '*:', '<-.', '>-.', '^-.', '-', '--']
+            fig, axes = plt.subplots(nrows=len(gammas), ncols=2)
+            for i in range(len(gammas)):
+                gamma = gammas[i]
+                I = II_ultility[i]
+                I.plot(ax=axes[i, 0], style=styles, legend=False)
+                axes[i, 0].set_ylabel('$\\gamma=$' + str(gamma))
+                I.plot(ax=axes[i, 1], y=[
+                    'Optimal Control with Constant Treatment',
+                    'Optimal Control with OU Treatment',
+                    'Full Control with Constant Treatment',
+                    'Full Control with OU Treatment'],
+                       style=styles, legend=False)
+
+                yfmt = ScalarFormatterForceFormat()
+                yfmt.set_powerlimits((0, 0))
+                axes[i, 0].yaxis.set_major_formatter(yfmt)
+                yfmt = ScalarFormatterForceFormat()
+                yfmt.set_powerlimits((0, 0))
+                axes[i, 1].yaxis.set_major_formatter(yfmt)
+
+            handles, labels = axes[0, 0].get_legend_handles_labels()
+
+            # Format plot
+            fig.set_size_inches(8, 10.5)
+            fig.subplots_adjust(left=0.1, bottom=0.2, right=0.95, top=0.9, wspace=0.3, hspace=0.4)
+            fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
+            plt.suptitle('Expected Utility of Low Infection Regime: $E-\\frac{I(t)^{1-\\gamma}}{1-\\gamma}$',
                          x=0.5)
             plt.show()
 

@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import numpy as np
 from library import conf
 from library.I_star import IStarLowConst
 from library.alpha_star import AlphaStarLowConst
-
+from library.data_simulation import DataLowConst
 
 def test_I_star_low_const_utility():
     gammas = [-1, -2, -3, -4, -5]
@@ -77,3 +77,13 @@ def test_I_star_low_const():
     plt.suptitle('$I$ of Low Infection with Constant Treatment', x=0.35)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
+
+def test_I_star_data_simulation():
+    np.random.seed(0)
+    Istar1 = IStarLowConst(alpha_star=1).I_star
+    print()
+    print(Istar1)
+    np.random.seed(0)
+    cla = DataLowConst(I0=conf.eps, n_steps=conf.length,n_trials=1)
+    Istar2 = cla.Is_trials
+    print(Istar2)

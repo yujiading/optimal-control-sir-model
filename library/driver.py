@@ -111,10 +111,7 @@ class Driver:
         I, Utility = self.get_I_star_utility_dict(gamma=gamma)
         return I, Utility
 
-    def get_I_star_utility_dict_simulation(self, gamma):
-        data_simulation = self.simulation_dict[self.model]
-        data = data_simulation(I0=self.I0, X0=self.X0, S0=self.S0, n_steps=self.n_steps, n_trials=self.n_trials)
-        # data = DataModerateOU(I0=I0, X0=X0, S0=S0, n_steps=n_steps, n_trials=n_trials)
+    def get_I_star_utility_dict_simulation(self, gamma, data):
         paralell = True
         if paralell:
             trials = list(range(self.n_trials))
@@ -134,7 +131,9 @@ class Driver:
     def plot(self):
         infection_type = self.infection_type_dict[self.model]
         treatment_type = self.treatment_type_dict[self.model]
-
+        data_simulation = self.simulation_dict[self.model]
+        data = data_simulation(I0=self.I0, X0=self.X0, S0=self.S0, n_steps=self.n_steps, n_trials=self.n_trials)
+        # data = DataModerateOU(I0=I0, X0=X0, S0=S0, n_steps=n_steps, n_trials=n_trials)
         styles = ['C0o-.', 'C1*:', 'C2<-.', 'C3>-.', 'C4^-.', 'C5-', 'C6--']
         fig, axes = plt.subplots(nrows=len(self.gammas), ncols=2)
         if self.is_simulation:
@@ -146,7 +145,7 @@ class Driver:
         for i in range(len(self.gammas)):
             gamma = self.gammas[i]
             if self.is_simulation:
-                I, Utility = self.get_I_star_utility_dict_simulation(gamma=gamma)
+                I, Utility = self.get_I_star_utility_dict_simulation(gamma=gamma, data=data)
             else:
                 I, Utility = self.get_I_star_utility_dict(gamma=gamma)
             if i > 0:

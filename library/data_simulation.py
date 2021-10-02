@@ -79,12 +79,6 @@ class DataModerateOU:
 class DataModerateConst(DataModerateOU):
     def __init__(self, I0, S0, X0=None, n_steps: int = 20, n_trials: int = 10000):
         super().__init__(I0=I0, X0=conf.X_bar, S0=S0, n_steps=n_steps, n_trials=n_trials)
-        self.d_B1_trials = None
-        self.d_B2_trials = None
-        self.Xs_trials = None
-        self.Is_trials = None
-        self.Ss_trials = None
-        self.get_data()
 
     def next_X(self, last_X, last_dB2):
         return conf.X_bar
@@ -119,6 +113,7 @@ class DataLowOU:
         Xs = [self.X0]
         Is = [self.I0]
         dB2 = []
+        # np.random.seed(0)
         for i in range(1, self.n_steps):
             last_X = Xs[-1]
             last_I = Is[-1]
@@ -132,6 +127,7 @@ class DataLowOU:
                 Xs.append(next_X)
                 dB2.append(last_dB2)
                 break
+        print(f'db2 {dB2}')
         return Is, Xs, dB2
 
     def get_data(self):
@@ -151,11 +147,6 @@ class DataLowOU:
 class DataLowConst(DataLowOU):
     def __init__(self, I0, X0=None, S0=None, n_steps: int = 20, n_trials: int = 10000):
         super().__init__(I0=I0, X0=conf.X_bar, n_steps=n_steps, n_trials=n_trials)
-        self.d_B1_trials = None
-        self.d_B2_trials = None
-        self.Xs_trials = None
-        self.Is_trials = None
-        self.get_data()
 
     def next_X(self, last_X, last_dB2):
         return conf.X_bar

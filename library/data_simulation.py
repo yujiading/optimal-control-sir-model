@@ -42,8 +42,8 @@ class DataModerateOU:
             last_X = Xs[-1]
             last_I = Is[-1]
             while True:
-                last_dB1 = np.random.normal(loc=0, scale=1, size=1)
-                last_dB2 = np.random.normal(loc=0, scale=1, size=1)
+                last_dB1 = np.random.normal(loc=0, scale=math.sqrt(conf.dt), size=1)
+                last_dB2 = np.random.normal(loc=0, scale=math.sqrt(conf.dt), size=1)
                 next_X = self.next_X(last_X=last_X, last_dB2=last_dB2)
                 next_S = self.next_S(last_S=last_S, last_I=last_I, last_dB1=last_dB1)
                 next_I = self.next_I(last_I=last_I, last_S=last_S, last_X=last_X, last_dB1=last_dB1, last_dB2=last_dB2)

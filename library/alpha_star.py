@@ -7,7 +7,7 @@ from library.g_functions import GFunctions
 
 
 class AlphaStarLowConst:
-    def __init__(self, gamma):
+    def __init__(self, gamma, T=None):
         self.gamma = gamma
 
     @property

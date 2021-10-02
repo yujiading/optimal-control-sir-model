@@ -77,7 +77,7 @@ class DataModerateOU:
 
 
 class DataModerateConst(DataModerateOU):
-    def __init__(self, I0, S0, n_steps: int = 20, n_trials: int = 10000):
+    def __init__(self, I0, S0, X0=None, n_steps: int = 20, n_trials: int = 10000):
         super().__init__(I0=I0, X0=conf.X_bar, S0=S0, n_steps=n_steps, n_trials=n_trials)
         self.d_B1_trials = None
         self.d_B2_trials = None
@@ -91,7 +91,7 @@ class DataModerateConst(DataModerateOU):
 
 
 class DataLowOU:
-    def __init__(self, I0, X0, n_steps: int = 20, n_trials: int = 10000):
+    def __init__(self, I0, X0, S0=None, n_steps: int = 20, n_trials: int = 10000):
         self.X0 = X0
         self.I0 = I0
         if self.I0 is None:
@@ -149,7 +149,7 @@ class DataLowOU:
 
 
 class DataLowConst(DataLowOU):
-    def __init__(self, I0, n_steps: int = 20, n_trials: int = 10000):
+    def __init__(self, I0, X0=None, S0=None, n_steps: int = 20, n_trials: int = 10000):
         super().__init__(I0=I0, X0=conf.X_bar, n_steps=n_steps, n_trials=n_trials)
         self.d_B1_trials = None
         self.d_B2_trials = None

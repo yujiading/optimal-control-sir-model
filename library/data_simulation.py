@@ -127,7 +127,7 @@ class DataLowOU:
                 Xs.append(next_X)
                 dB2.append(last_dB2)
                 break
-        print(f'db2 {dB2}')
+        # print(f'db2 {dB2}')
         return Is, Xs, dB2
 
     def get_data(self):

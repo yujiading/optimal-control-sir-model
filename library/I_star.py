@@ -16,7 +16,7 @@ class IStarLowConst:
         Isig2 = IFunctions.I_sigma_2(alpha=self.alpha_star)
         I = [eps]
         dB2 = IFunctions.d_B2(S=S, X=X)
-        print(f'db2 {dB2}')
+        # print(f'db2 {dB2}')
 
         for i in range(conf.length - 1):
             if isinstance(Imudt1, np.ndarray):

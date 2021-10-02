@@ -1,5 +1,5 @@
 from typing import Union
-
+import math
 import numpy as np
 
 from library import conf
@@ -31,9 +31,9 @@ class IStarLowConst:
             ret = ret * I[-1]
             if not isinstance(S, int):
                 dB1 = IFunctions.d_B1()
-                ret = ret + Isig1 * (S[i] * I[-1]) ** 0.5 * dB1[i]
-                # if ret <= 0:
-                #     ret = 0.001
+                ret = ret + Isig1 * math.sqrt(S[i] * I[-1]) * dB1[i]
+                if ret <= 0:
+                    ret = 0
             I.append(ret)
         return np.array(I)
 

@@ -1,6 +1,6 @@
 from functools import partial, reduce
 from multiprocessing import Pool
-
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import ScalarFormatter
@@ -94,16 +94,11 @@ class Driver:
             Utility[f'No Control'] = Driver.utility(I=I_no, gamma=gamma)
         return I, Utility
 
-    def parallel_helper(self, idx, data, gamma):
-        try:
-            conf.Xs = data.Xs_trials[idx]
-        except:
-            pass
-        try:
-            conf.Ss = data.Ss_trials[idx]
-        except:
-            pass
-        conf.Is = data.Is_trials[idx]
+    def parallel_helper(self, data_elm, gamma):
+        """
+        data: [(Xs_trials, Ss_trials, Is_trials), ...]
+        """
+        conf.Xs, conf.Ss, conf.Is = data_elm
         conf.length = len(conf.Is)
         conf.dIs = conf.Is[1:] - conf.Is[:-1]
         conf.dSs = conf.Ss[1:] - conf.Ss[:-1]
@@ -112,12 +107,14 @@ class Driver:
         return I, Utility
 
     def get_I_star_utility_dict_simulation(self, gamma, data):
+        """
+        data: [(data.Xs_trials, data.Ss_trials , data.Is_trials), ... ]
+        """
         paralell = True
         if paralell:
             trials = list(range(self.n_trials))
             with Pool(self.cpu) as p:
-                ret = list(tqdm(p.imap(partial(self.parallel_helper,
-                                               data=data, gamma=gamma), trials), total=self.n_trials))
+                ret = list(tqdm(p.imap(partial(self.parallel_helper, gamma=gamma), data), total=self.n_trials))
             I_list = [item[0] for item in ret]
             Utility_list = [item[1] for item in ret]
             I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
@@ -133,6 +130,11 @@ class Driver:
         treatment_type = self.treatment_type_dict[self.model]
         data_simulation = self.simulation_dict[self.model]
         data = data_simulation(I0=self.I0, X0=self.X0, S0=self.S0, n_steps=self.n_steps, n_trials=self.n_trials)
+        if not hasattr(data, 'Ss_trials'):
+            data.Ss_trials = np.zeros((self.n_trials, self.n_steps))
+        if not hasattr(data, 'Is_trials'):
+            data.Is_trials = np.zeros((self.n_trials, self.n_steps))
+        dataset = list(zip(list(data.Xs_trials), list(data.Ss_trials), list(data.Is_trials)))
         # data = DataModerateOU(I0=I0, X0=X0, S0=S0, n_steps=n_steps, n_trials=n_trials)
         styles = ['C0o-.', 'C1*:', 'C2<-.', 'C3>-.', 'C4^-.', 'C5-', 'C6--']
         fig, axes = plt.subplots(nrows=len(self.gammas), ncols=2)
@@ -145,7 +147,7 @@ class Driver:
         for i in range(len(self.gammas)):
             gamma = self.gammas[i]
             if self.is_simulation:
-                I, Utility = self.get_I_star_utility_dict_simulation(gamma=gamma, data=data)
+                I, Utility = self.get_I_star_utility_dict_simulation(gamma=gamma, data=dataset)
             else:
                 I, Utility = self.get_I_star_utility_dict(gamma=gamma)
             if i > 0:

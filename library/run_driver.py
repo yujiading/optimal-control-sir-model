@@ -8,8 +8,8 @@ def run():
     """
     model takes values: 'LowConst', 'LowOU', 'ModerateConst', 'ModerateOU'
     """
-    driver = Driver(model='LowConst', gammas=[-1], T=1, is_simulation=True, X0=conf.X0, I0=conf.eps, S0=conf.S0,
-                    cpu=8, n_trials=1000, n_steps=conf.n_steps, is_include_optimal_control=True,
+    driver = Driver(model='LowOU', gammas=[-1,-2,-3,-4,-5], T=1, is_simulation=True, X0=conf.X0, I0=conf.eps, S0=conf.S0,
+                    cpu=8, n_trials=10000, n_steps=20, is_include_optimal_control=True,
                     is_include_full_control=True, is_include_no_control=True)
 
     driver.plot()

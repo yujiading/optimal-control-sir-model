@@ -1,20 +1,24 @@
 from dataclasses import dataclass, field
 from typing import List
 from models.model_mapper import ModelTypes
+from models import model_params
 
 @dataclass
 class RunConfig:
     model: str = ModelTypes.LowOU
     gammas: List = field(default_factory=lambda: [-1, -5])
     T = 1
-    is_simulation: bool = True
-    X0 = None
-    I0 = None
-    S0 = None
+    X0 = model_params.X0
+    I0 = model_params.eps
+    S0 = model_params.S0
     cpu: int = 8
-    n_trials_data_generation: int = 1
-    n_trials: int = 10
-    n_steps: int = 20
     is_include_optimal_control: bool = True
     is_include_full_control: bool = True
     is_include_no_control: bool = True
+    is_simulation: bool = True
+    n_trials_simulation_data_generation: int = 1
+    n_steps_simulation_data_generation: int = 100
+    # n_trials_monte_carlo: int = 50000
+    # seed: int = None  # Set to None to turn off seeding
+    n_trials_monte_carlo: int = 50
+    seed: int = 0  # Set to None to turn off seeding

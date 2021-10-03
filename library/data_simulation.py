@@ -92,10 +92,10 @@ class DataLowOU:
     def __init__(self, I0, X0, S0=None, n_steps: int = 20, n_trials: int = 10000):
         self.X0 = X0
         self.I0 = I0
-        if self.I0 is None:
-            self.I0 = np.random.uniform(library.models.model_params.eps, 0.1)
-        if self.X0 is None:
-            self.X0 = np.random.uniform(-0.5, 0.5)
+        # if self.I0 is None:
+        #     self.I0 = np.random.uniform(library.models.model_params.eps, 0.1)
+        # if self.X0 is None:
+        #     self.X0 = np.random.uniform(-0.5, 0.5)
         self.n_trials = n_trials
         self.n_steps = n_steps
         self.d_B2_trials = None

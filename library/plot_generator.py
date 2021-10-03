@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import ScalarFormatter
 from tqdm import tqdm
-
+from library.models.model_validation_result import ModelValidationResult
 from library import conf
 from library.I_star import IStarLowConst, IStarLowOU, IStarModerateOU, IStarModerateConst
 from library.alpha_star import AlphaStarLowConst, AlphaStarLowOU, AlphaStarModerateOU, AlphaStarModerateConst
 from library.data_simulation import DataModerateOU, DataLowOU, DataLowConst, DataModerateConst
 from models.model_mapper import ModelTypes, VariableNames, model_class_map
+from typing import List, Dict
 
 
 class PlotGenerator:
@@ -23,10 +24,17 @@ class PlotGenerator:
                            "ModerateConst": "Moderate",
                            "ModerateOU": "Moderate"}
 
-    def plot(self, gammas, gamma_to_results, is_simulation, model):
+    def plot(
+            self,
+            gammas,
+            gamma_to_results,
+            is_simulation,
+            model
+    ):
         infection_type = self.infection_type_dict[model]
         treatment_type = self.treatment_type_dict[model]
-        styles = ['C0o-.', 'C1*:', 'C2<-.', 'C3>-.', 'C4^-.', 'C5-', 'C6--']
+        # styles = ['C0o-.', 'C1*:', 'C2<-.', 'C3>-.', 'C4^-.', 'C5-', 'C6--']
+        styles = ['C0-', 'C1:', 'C2-.', 'C3-.', 'C4-.', 'C5-', 'C6--']
         fig, axes = plt.subplots(nrows=len(gammas), ncols=2)
         if is_simulation:
             subtitle_I = f"Expected Infection: $EI(t)$"

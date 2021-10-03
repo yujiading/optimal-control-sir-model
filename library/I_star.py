@@ -11,15 +11,18 @@ class IStarLowConst:
     def __init__(self, alpha_star: Union[float, np.array]):
         self.alpha_star = alpha_star  # estimated alpha
 
-    def I_star_(self, S, X, eps):
+    def _I_star(self, S, X, eps, length):
+        """
+            dI = I_mu I dt + I_sigma_2 I dB2 + I_sigma_1 sqrt(SI) dB1
+        """
         Imudt1 = IFunctions.I_mu(alpha=self.alpha_star, S=S, X=X) * library.models.model_params.dt + 1
         Isig1 = IFunctions.I_sigma_1()
         Isig2 = IFunctions.I_sigma_2(alpha=self.alpha_star)
         I = [eps]
-        dB2 = IFunctions.d_B2(S=S, X=X)
+        dB2 = IFunctions.d_B2(length=length)
         # print(f'db2 {dB2}')
 
-        for i in range(conf.length - 1):
+        for i in range(length - 1):
             if isinstance(Imudt1, np.ndarray):
                 Imudt1_ = Imudt1[i]
             else:
@@ -31,43 +34,63 @@ class IStarLowConst:
             ret = Imudt1_ + Isig2_ * dB2[i]
             ret = ret * I[-1]
             if not isinstance(S, int):
-                dB1 = IFunctions.d_B1()
+                dB1 = IFunctions.get_d_B1(length=length)
                 ret = ret + Isig1 * math.sqrt(S[i] * I[-1]) * dB1[i]
                 if ret <= 0:
                     ret = 0
             I.append(ret)
         return np.array(I)
 
-    @property
-    def I_star(self):
-        return self.I_star_(S=1, X=library.models.model_params.X_bar, eps=library.models.model_params.eps_low)
+    def get_I_star(self, Xs, Ss):
+        length = len(Xs)
+        return self._I_star(
+            S=1,
+            X=library.models.model_params.X_bar,
+            eps=library.models.model_params.eps_low,
+            length=length
+        )
 
 
 class IStarLowOU(IStarLowConst):
     def __init__(self, alpha_star: Union[float, np.array]):
         super().__init__(alpha_star)
 
-    @property
-    def I_star(self):
-        return self.I_star_(S=1, X=conf.Xs, eps=library.models.model_params.eps_low)
+    def get_I_star(self, Xs, Ss):
+        length = len(Xs)
+        return self._I_star(
+            S=1,
+            X=Xs,
+            eps=library.models.model_params.eps_low,
+            length=length
+        )
 
 
 class IStarModerateOU(IStarLowConst):
     def __init__(self, alpha_star: Union[float, np.array]):
         super().__init__(alpha_star)
 
-    @property
-    def I_star(self):
-        return self.I_star_(S=conf.Ss, X=conf.Xs, eps=library.models.model_params.eps_moderate)
+    def get_I_star(self, Xs, Ss):
+        length = len(Xs)
+        return self._I_star(
+            S=Ss,
+            X=Xs,
+            eps=library.models.model_params.eps_moderate,
+            length=length
+        )
 
 
 class IStarModerateConst(IStarLowConst):
     def __init__(self, alpha_star: Union[float, np.array]):
         super().__init__(alpha_star)
 
-    @property
-    def I_star(self):
-        return self.I_star_(S=conf.Ss, X=library.models.model_params.X_bar, eps=library.models.model_params.eps_moderate)
+    def get_I_star(self, Xs, Ss):
+        length = len(Xs)
+        return self._I_star(
+            S=Ss,
+            X=library.models.model_params.X_bar,
+            eps=library.models.model_params.eps_moderate,
+            length=length
+        )
 
 # class IStarLowOU:
 #     def __init__(self, alpha_star: Union[float, np.array], eps: float, T, gamma):

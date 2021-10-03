@@ -2,6 +2,7 @@ import numpy as np
 import math
 
 import library.models.model_params
+from library.models import model_params
 from library import conf
 from library.H_functions import HFunctions, SimpleHFunctions
 from library.I_functions import IFunctions
@@ -12,10 +13,9 @@ class AlphaStarLowConst:
     def __init__(self, gamma, T=None):
         self.gamma = gamma
 
-    @property
-    def alpha_star(self):
-        ret = (
-                          library.models.model_params.k1_bar - library.models.model_params.K0) / library.models.model_params.sigma ** 2 / abs(self.gamma)
+    def get_alpha_star(self, Xs, Ss, Is):
+        ret = (library.models.model_params.k1_bar - library.models.model_params.K0) \
+              / library.models.model_params.sigma ** 2 / abs(self.gamma)
         return min(1, max(0, ret))
 
 
@@ -24,14 +24,15 @@ class AlphaStarLowOU:
         self.gamma = gamma
         self.T = T
 
-    @property
-    def alpha_star(self):
+    def get_alpha_star(self, Xs, Ss, Is):
         alpha_star_ = []
-        for t in range(conf.length):
-            A1 = HFunctions.A_1(gamma=self.gamma, tau=self.T - t)
-            A2 = HFunctions.A_2(gamma=self.gamma, tau=self.T - t)
-            X = conf.Xs[t]
-            alpha_star_.append((X - library.models.model_params.sigma_x * (A1 * X + A2)) / self.gamma / library.models.model_params.sigma)
+        length = len(Is)
+        for t in range(length):
+            A1 = HFunctions.A_1(gamma=self.gamma, tau=self.T - t * model_params.dt)
+            A2 = HFunctions.A_2(gamma=self.gamma, tau=self.T - t * model_params.dt)
+            X = Xs[t]
+            alpha_star_.append((X - library.models.model_params.sigma_x * (
+                    A1 * X + A2)) / self.gamma / library.models.model_params.sigma)
         return np.array(alpha_star_)
 
 
@@ -41,57 +42,61 @@ class AlphaStarModerateOU:
         self.T = T
 
     def _A11_X_A12(self, t, X_t):
-        return HFunctions.A_1(gamma=self.gamma, tau=self.T - t) * X_t + HFunctions.A_2(gamma=self.gamma, tau=self.T - t)
+        return HFunctions.A_1(gamma=self.gamma, tau=self.T - t * model_params.dt) * X_t + HFunctions.A_2(
+            gamma=self.gamma, tau=self.T - t * model_params.dt)
 
-    @property
-    def alpha0(self):
+    def _get_alpha0(self, Xs, length):
         alpha0 = []
-        for i in range(conf.length):
-            alpha0.append((conf.Xs[i] - library.models.model_params.sigma_x * self._A11_X_A12(t=library.models.model_params.dt * i,
-                                                                                              X_t=conf.Xs[i])) / self.gamma / library.models.model_params.sigma)
+        for i in range(length):
+            alpha0.append((Xs[i] - library.models.model_params.sigma_x * self._A11_X_A12(
+                t=library.models.model_params.dt * i,
+                X_t=Xs[i])) / self.gamma / library.models.model_params.sigma)
         return np.array(alpha0)
 
     @staticmethod
-    def Zs(X, Z_0):
-
+    def _get_Zs(X, Z_0, Ss, Is, length):
         # d logZ = a dt+b dB1+c dB2
-        a = -library.models.model_params.mu + X ** 2 / 2 + library.models.model_params.beta ** 2 * conf.Ss * conf.Is / 2 / library.models.model_params.sigma_s ** 2
-        b = -library.models.model_params.beta * (conf.Ss * conf.Is) ** 0.5 / library.models.model_params.sigma_s
+        a = -library.models.model_params.mu + X ** 2 / 2 + library.models.model_params.beta ** 2 * Ss * Is / 2 / library.models.model_params.sigma_s ** 2
+        b = -library.models.model_params.beta * (Ss * Is) ** 0.5 / library.models.model_params.sigma_s
         c = X
 
-        logzs = np.zeros(conf.length)
+        logzs = np.zeros(length)
         logzs[0] = math.log(Z_0)
-        dB1 = IFunctions.d_B1()
-        dB2 = IFunctions.d_B2(S=conf.Ss, X=X)
-        for i in range(conf.length - 1):
+        dB1 = IFunctions.get_d_B1(length=length)
+        dB2 = IFunctions.d_B2(length=length)
+        for i in range(length - 1):
             if isinstance(c, np.ndarray):
                 c = c[i]
             logzs[i + 1] = logzs[i] + library.models.model_params.dt * a[i] + b[i] * dB1[i] + c * dB2[i]
         zs = np.exp(logzs)
         return zs
 
-    @property
-    def alpha1(self):
+    def _get_alpha1(self, Xs, Ss, Is, length):
         Z_0 = 1 / HFunctions.H(i=1, gamma=self.gamma, tau=self.T, X_t=0)
-        zs = self.Zs(X=conf.Xs, Z_0=Z_0)
+        zs = self._get_Zs(X=Xs, Z_0=Z_0, Ss=Ss, Is=Is, length=length)
         gfunctions = GFunctions(gamma=self.gamma, T=self.T)
         alpha1 = []
-        for i in range(conf.length):
-            g = gfunctions.g(t=library.models.model_params.dt * i, X_t=conf.Xs[i])
-            a1 = zs[i] ** (1 / self.gamma) * conf.Ss[i] / library.models.model_params.sigma / HFunctions.H(i=1, gamma=self.gamma,
-                                                                                                           tau=self.T - library.models.model_params.dt * i,
-                                                                                                           X_t=conf.Xs[i])
-            a2 = g * conf.Xs[
-                i] / self.gamma - library.models.model_params.sigma_x * gfunctions.d_g_d_X(t=library.models.model_params.dt * i, X_t=conf.Xs[
-                i]) + library.models.model_params.sigma_x * g / self.gamma * self._A11_X_A12(t=library.models.model_params.dt * i,
-                                                                                             X_t=conf.Xs[i])
+        for i in range(length):
+            g = gfunctions.g(t=library.models.model_params.dt * i, X_t=Xs[i])
+            a1 = zs[i] ** (1 / self.gamma) * Ss[i] / library.models.model_params.sigma / HFunctions.H(i=1,
+                                                                                                      gamma=self.gamma,
+                                                                                                      tau=self.T - library.models.model_params.dt * i,
+                                                                                                      X_t=Xs[i])
+            a2 = g * Xs[
+                i] / self.gamma - library.models.model_params.sigma_x * gfunctions.d_g_d_X(
+                t=library.models.model_params.dt * i, X_t=Xs[
+                    i]) + library.models.model_params.sigma_x * g / self.gamma * self._A11_X_A12(
+                t=library.models.model_params.dt * i,
+                X_t=Xs[i])
 
             alpha1.append(a1 * a2)
         return np.array(alpha1)
 
-    @property
-    def alpha_star(self):
-        return self.alpha0 + library.models.model_params.eps_moderate * self.alpha1 + library.models.model_params.eps_moderate ** 2
+    def get_alpha_star(self, Xs, Ss, Is):
+        length = len(Is)
+        alpha0 = self._get_alpha0(Xs=Xs, length=length)
+        alpha1 = self._get_alpha1(Xs=Xs, Ss=Ss, Is=Is, length=length)
+        return alpha0 + library.models.model_params.eps_moderate * alpha1 + library.models.model_params.eps_moderate ** 2
 
 
 class AlphaStarModerateConst:
@@ -100,29 +105,29 @@ class AlphaStarModerateConst:
         self.T = T
 
     @property
-    def alpha0(self):
+    def _alpha0(self):
         return library.models.model_params.X_bar / self.gamma / library.models.model_params.sigma
 
-    def g2(self, t):
+    def _get_g2(self, t):
         a1 = library.models.model_params.beta ** 2 / 2 / library.models.model_params.sigma_s ** 2
-        h_2 = SimpleHFunctions(gamma=self.gamma, i=2).h(tau=self.T - t)
-        h_1 = SimpleHFunctions(gamma=self.gamma, i=1).h(tau=self.T - t)
+        h_2 = SimpleHFunctions(gamma=self.gamma, i=2).h(tau=self.T - t * model_params.dt)
+        h_1 = SimpleHFunctions(gamma=self.gamma, i=1).h(tau=self.T - t * model_params.dt)
         a2 = h_2 - h_1 ** 2
         a3 = self.gamma * library.models.model_params.mu - library.models.model_params.X_bar ** 2 / self.gamma
         return a1 * a2 / a3
 
-    @property
-    def alpha1(self):
+    def _get_alpha1(self, Ss, Is, length):
         z_0 = 1 / SimpleHFunctions(gamma=self.gamma, i=1).h(tau=self.T)
-        zs = AlphaStarModerateOU.Zs(X=library.models.model_params.X_bar, Z_0=z_0)
+        zs = AlphaStarModerateOU._get_Zs(X=library.models.model_params.X_bar, Z_0=z_0, Ss=Ss, Is=Is, length=length)
         alpha1 = []
-        for i in range(conf.length):
+        for i in range(length):
             h_1 = SimpleHFunctions(gamma=self.gamma, i=1).h(tau=self.T - library.models.model_params.dt * i)
-            a1 = zs[i] ** (1 / self.gamma) * conf.Ss[i] / library.models.model_params.sigma / h_1
-            a2 = self.g2(t=library.models.model_params.dt * i) * library.models.model_params.X_bar / self.gamma
+            a1 = zs[i] ** (1 / self.gamma) * Ss[i] / library.models.model_params.sigma / h_1
+            a2 = self._get_g2(t=library.models.model_params.dt * i) * library.models.model_params.X_bar / self.gamma
             alpha1.append(a1 * a2)
         return np.array(alpha1)
 
-    @property
-    def alpha_star(self):
-        return self.alpha0 + library.models.model_params.eps_moderate * self.alpha1 + library.models.model_params.eps_moderate ** 2
+    def get_alpha_star(self, Xs, Ss, Is):
+        length = len(Is)
+        alpha1 = self._get_alpha1(Ss=Ss, Is=Is, length=length)
+        return self._alpha0 + library.models.model_params.eps_moderate * alpha1 + library.models.model_params.eps_moderate ** 2

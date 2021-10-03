@@ -24,13 +24,13 @@ class IFunctions:
         return -library.models.model_params.sigma_s
 
     @staticmethod
-    def d_B1():
-        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=conf.length - 1)
+    def get_d_B1(length):
+        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=length - 1)
 
     @staticmethod
-    def d_B2(S: Union[float, np.array], X: Union[float, np.array]):
+    def d_B2(length):
         # np.random.seed(0)
-        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=conf.length - 1)
+        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=length - 1)
     #
     # @staticmethod
     # def d_B1():

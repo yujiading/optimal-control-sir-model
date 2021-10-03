@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import ScalarFormatter
 from tqdm import tqdm
-from library.models.model_validation_result import ModelValidationResult
+from library.models.model_result import ModelResult
 from library import conf
 from library.I_star import IStarLowConst, IStarLowOU, IStarModerateOU, IStarModerateConst
 from library.alpha_star import AlphaStarLowConst, AlphaStarLowOU, AlphaStarModerateOU, AlphaStarModerateConst

@@ -80,7 +80,8 @@ class Driver:
         with Pool(self.run_config.cpu) as p:
             ret = list(
                 tqdm(p.imap(partial(self.get_I_star_utility_dict, Xs=Xs, Ss=Ss, Is=Is),
-                            [gamma] * self.run_config.n_trials_monte_carlo), total=self.run_config.n_trials_monte_carlo))
+                            [gamma] * self.run_config.n_trials_monte_carlo),
+                     total=self.run_config.n_trials_monte_carlo))
         I_list = [item[0] for item in ret]
         Utility_list = [item[1] for item in ret]
         I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
@@ -122,9 +123,11 @@ class Driver:
                                n_steps=self.run_config.n_steps_simulation_data_generation,
                                n_trials=self.run_config.n_trials_simulation_data_generation)
         if not hasattr(data, 'Ss_trials'):
-            data.Ss_trials = np.zeros((self.run_config.n_trials_simulation_data_generation, self.run_config.n_steps_simulation_data_generation))
+            data.Ss_trials = np.zeros((self.run_config.n_trials_simulation_data_generation,
+                                       self.run_config.n_steps_simulation_data_generation))
         if not hasattr(data, 'Is_trials'):
-            data.Is_trials = np.zeros((self.run_config.n_trials_simulation_data_generation, self.run_config.n_steps_simulation_data_generation))
+            data.Is_trials = np.zeros((self.run_config.n_trials_simulation_data_generation,
+                                       self.run_config.n_steps_simulation_data_generation))
         dataset = list(zip(list(data.Xs_trials), list(data.Ss_trials), list(data.Is_trials)))
 
         # simulate for no control
@@ -144,9 +147,21 @@ class Driver:
                     Ss=Ss
                 )
             gamma_to_results[gamma] = (I, Utility)
-        # simulate for full control
 
-        # simulate for optimal control
+            simulator = BaseSimulator()
+            simulation_result = simulator.run_simulation(alpha_star=model_params.eps)
+
+            # simulate for full control
+            simulator = BaseSimulator()
+            simulation_result = simulator.run_simulation(alpha_star=1)
+
+            # simulate for optimal control
+            simulator = BaseSimulator()
+            model_result = simulator.run_model_and_simulation(Xs=Xs, Ss=Ss, Is=Is)
+
+            # combine results for gamma
+            pass
+            gamma_to_results[gamma] = None
 
         # plot
         plot_generator = PlotGenerator()
@@ -156,3 +171,28 @@ class Driver:
             is_simulation=self.run_config.is_simulation,
             model=self.run_config.model
         )
+
+
+def run():
+    """
+    model takes values: 'LowConst', 'LowOU', 'ModerateConst', 'ModerateOU'
+    """
+    run_config = RunConfig(ModelTypes.LowConst)
+    driver = Driver(run_config=run_config)
+    driver.run()
+
+    # run_config = RunConfig(ModelTypes.LowOU)
+    # driver = Driver(run_config=run_config)
+    # driver.run()
+    #
+    # run_config = RunConfig(ModelTypes.ModerateConst)
+    # driver = Driver(run_config=run_config)
+    # driver.run()
+    #
+    # run_config = RunConfig(ModelTypes.ModerateOU)
+    # driver = Driver(run_config=run_config)
+    # driver.run()
+
+
+if __name__ == '__main__':
+    run()

@@ -102,7 +102,6 @@ class DataLowOU:
         self.Xs_trials = None
         self.Is_trials = None
         self.get_data()
-
     def next_X(self, last_X, last_dB2):
         ret = last_X + library.models.model_params.lambda_x * (
                     library.models.model_params.X_bar - last_X) * library.models.model_params.dt - library.models.model_params.sigma_x * last_dB2

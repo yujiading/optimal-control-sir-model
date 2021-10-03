@@ -2,6 +2,7 @@ from typing import Union
 import math
 import numpy as np
 
+import library.models.model_params
 from library import conf
 
 
@@ -12,24 +13,24 @@ class IFunctions:
 
     @staticmethod
     def I_mu(alpha: Union[float, np.array], S: Union[float, np.array], X: Union[float, np.array]):
-        return conf.beta * S - conf.mu + alpha * conf.sigma * X
+        return library.models.model_params.beta * S - library.models.model_params.mu + alpha * library.models.model_params.sigma * X
 
     @staticmethod
     def I_sigma_2(alpha: Union[float, np.array]):
-        return alpha * conf.sigma
+        return alpha * library.models.model_params.sigma
 
     @staticmethod
     def I_sigma_1():
-        return -conf.sigma_s
+        return -library.models.model_params.sigma_s
 
     @staticmethod
     def d_B1():
-        return np.random.normal(loc=0, scale=math.sqrt(conf.dt), size=conf.length-1)
+        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=conf.length - 1)
 
     @staticmethod
     def d_B2(S: Union[float, np.array], X: Union[float, np.array]):
         # np.random.seed(0)
-        return np.random.normal(loc=0, scale=math.sqrt(conf.dt), size=conf.length-1)
+        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=conf.length - 1)
     #
     # @staticmethod
     # def d_B1():

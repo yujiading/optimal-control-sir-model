@@ -1,6 +1,8 @@
 import math
 
 import numpy as np
+
+import library.models.model_params
 from library import conf
 
 
@@ -15,11 +17,11 @@ class SigmaSDoubleSum:
         """
 
         trial_length = len(conf.Is)
-        dB = np.random.randn(trial_length) * math.sqrt(conf.dt)
+        dB = np.random.randn(trial_length) * math.sqrt(library.models.model_params.dt)
         sigma_s_lst = []
         sigma_s_square_lst = []
         for i in range(trial_length-1):
-            new_sigma_s = conf.Ss[i+1]-conf.Ss[i]+ conf.beta * conf.Ss[i] * conf.Is[i] * conf.dt
+            new_sigma_s = conf.Ss[i+1] - conf.Ss[i] + library.models.model_params.beta * conf.Ss[i] * conf.Is[i] * library.models.model_params.dt
             new_sigma_s = new_sigma_s/math.sqrt(conf.Ss[i] * conf.Is[i])/dB[i]
             new_sigma_s_square = new_sigma_s ** 2
             sigma_s_square_lst.append(new_sigma_s_square)
@@ -51,8 +53,8 @@ class SigmaSSquareConst:
         trial_length = len(conf.Is)
         sigma_s_square_lst = []
         for i in range(trial_length - 1):
-            new_sigma_s = conf.Ss[i + 1] - conf.Ss[i] + conf.beta * conf.Ss[i] * conf.Is[i] * conf.dt
-            new_sigma_s = new_sigma_s / math.sqrt(conf.Ss[i] * conf.Is[i]*conf.dt)
+            new_sigma_s = conf.Ss[i + 1] - conf.Ss[i] + library.models.model_params.beta * conf.Ss[i] * conf.Is[i] * library.models.model_params.dt
+            new_sigma_s = new_sigma_s / math.sqrt(conf.Ss[i] * conf.Is[i] * library.models.model_params.dt)
             new_sigma_s_square = new_sigma_s**2
             sigma_s_square_lst.append(new_sigma_s_square)
         return math.sqrt(np.sum(sigma_s_square_lst)/trial_length)

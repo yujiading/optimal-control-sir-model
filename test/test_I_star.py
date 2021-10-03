@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+
+import library.models.model_params
 from library import conf
 from library.I_star import IStarLowConst
 from library.alpha_star import AlphaStarLowConst
@@ -84,6 +86,6 @@ def test_I_star_data_simulation():
     print()
     print(Istar1)
     np.random.seed(0)
-    cla = DataLowConst(I0=conf.eps, n_steps=conf.length,n_trials=1)
+    cla = DataLowConst(I0=library.models.model_params.eps, n_steps=conf.length, n_trials=1)
     Istar2 = cla.Is_trials
     print(Istar2)

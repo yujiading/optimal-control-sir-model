@@ -1,18 +1,18 @@
+import library.models.model_params
 from library.driver import Driver
 from library import conf
 from library.data_simulation import DataModerateOU
 import numpy as np
+from run_config import RunConfig
 
 
 def run():
     """
     model takes values: 'LowConst', 'LowOU', 'ModerateConst', 'ModerateOU'
     """
-    driver = Driver(model='LowOU', gammas=[-1,-5], T=1, is_simulation=True, X0=conf.X0, I0=conf.eps, S0=conf.S0,
-                    cpu=8, n_trials=10, n_steps=20, is_include_optimal_control=True,
-                    is_include_full_control=True, is_include_no_control=True)
-
-    driver.plot()
+    run_config = RunConfig()
+    driver = Driver(run_config=run_config)
+    driver.run()
 
 
 # uncomment to run

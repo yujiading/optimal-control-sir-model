@@ -2,6 +2,7 @@ import math
 
 import scipy.integrate as integrate
 
+import library.models.model_params
 from library import conf
 
 
@@ -14,13 +15,13 @@ class HFunctions:
     @staticmethod
     def b_2(gamma):
         ret = (gamma - 1) / gamma
-        ret = ret * conf.sigma_x
-        ret = ret - conf.lambda_x
+        ret = ret * library.models.model_params.sigma_x
+        ret = ret - library.models.model_params.lambda_x
         return 2 * ret
 
     @staticmethod
     def b_3(gamma):
-        return conf.sigma_x ** 2 / gamma
+        return library.models.model_params.sigma_x ** 2 / gamma
 
     @staticmethod
     def theta(gamma):
@@ -53,13 +54,13 @@ class HFunctions:
         exp_2 = HFunctions._exp(n=2, tau=tau, gamma=gamma)
         theta = HFunctions.theta(gamma=gamma)
         bottom = HFunctions._bottom(tau=tau, gamma=gamma)
-        return (4 * conf.lambda_x * conf.X_bar * b1 * exp_2 ** 2) / theta / bottom
+        return (4 * library.models.model_params.lambda_x * library.models.model_params.X_bar * b1 * exp_2 ** 2) / theta / bottom
 
     @staticmethod
     def A_3_numeric(tau, gamma):
-        coef2 = conf.sigma_x ** 2 / 2
-        coef1 = coef2 / gamma + conf.lambda_x * conf.X_bar
-        coef3 = (gamma - 1) * conf.mu * tau
+        coef2 = library.models.model_params.sigma_x ** 2 / 2
+        coef1 = coef2 / gamma + library.models.model_params.lambda_x * library.models.model_params.X_bar
+        coef3 = (gamma - 1) * library.models.model_params.mu * tau
         low = 0.001
         if tau <= low:
             low = tau / 10
@@ -76,11 +77,11 @@ class HFunctions:
         A2 = HFunctions.A_2(tau=tau, gamma=gamma)
         theta = HFunctions.theta(gamma=gamma)
         bottom = HFunctions._bottom(tau=tau, gamma=gamma)
-        coef2 = conf.sigma_x ** 2 / 2
-        coef1 = coef2 / gamma + conf.lambda_x * conf.X_bar
-        coef3 = (gamma - 1) * conf.mu * tau
-        a1 = 2 * conf.lambda_x * conf.X_bar * b2 * A2 / theta ** 3 / b3
-        a2 = 2 * conf.lambda_x ** 2 * conf.X_bar ** 2 / theta ** 3
+        coef2 = library.models.model_params.sigma_x ** 2 / 2
+        coef1 = coef2 / gamma + library.models.model_params.lambda_x * library.models.model_params.X_bar
+        coef3 = (gamma - 1) * library.models.model_params.mu * tau
+        a1 = 2 * library.models.model_params.lambda_x * library.models.model_params.X_bar * b2 * A2 / theta ** 3 / b3
+        a2 = 2 * library.models.model_params.lambda_x ** 2 * library.models.model_params.X_bar ** 2 / theta ** 3
         a3 = -A1 / b3
         a4 = 8 * b1 ** 2 * tau / (b2 - theta) / (b1 * b3) ** 0.5
         # a5 = cmath.log(self._bottom(tau=tau) / 2 * self.theta)
@@ -108,7 +109,7 @@ class HFunctions:
             gamma = gamma / i
         if i == 0:
             i = 1
-            const = (1 - gamma) * (conf.mu + conf.r) * tau
+            const = (1 - gamma) * (library.models.model_params.mu + library.models.model_params.r) * tau
         A1 = HFunctions.A_1(tau=tau, gamma=gamma)
         A2 = HFunctions.A_2(tau=tau, gamma=gamma)
         A3 = HFunctions.A_3(tau=tau, gamma=gamma)
@@ -132,8 +133,8 @@ class SimpleHFunctions:
 
     @property
     def a_2(self):
-        return (self._gamma_over - 1) * conf.mu
+        return (self._gamma_over - 1) * library.models.model_params.mu
 
     def h(self, tau):
-        power = 1 / self._gamma_over * (self.a_1 * conf.X_bar ** 2 / 2 + self.a_2) * tau
+        power = 1 / self._gamma_over * (self.a_1 * library.models.model_params.X_bar ** 2 / 2 + self.a_2) * tau
         return math.exp(power)

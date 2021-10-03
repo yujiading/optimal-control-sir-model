@@ -2,6 +2,7 @@ from typing import Union
 import math
 import numpy as np
 
+import library.models.model_params
 from library import conf
 from library.I_functions import IFunctions
 
@@ -11,7 +12,7 @@ class IStarLowConst:
         self.alpha_star = alpha_star  # estimated alpha
 
     def I_star_(self, S, X, eps):
-        Imudt1 = IFunctions.I_mu(alpha=self.alpha_star, S=S, X=X) * conf.dt + 1
+        Imudt1 = IFunctions.I_mu(alpha=self.alpha_star, S=S, X=X) * library.models.model_params.dt + 1
         Isig1 = IFunctions.I_sigma_1()
         Isig2 = IFunctions.I_sigma_2(alpha=self.alpha_star)
         I = [eps]
@@ -39,7 +40,7 @@ class IStarLowConst:
 
     @property
     def I_star(self):
-        return self.I_star_(S=1, X=conf.X_bar, eps=conf.eps_low)
+        return self.I_star_(S=1, X=library.models.model_params.X_bar, eps=library.models.model_params.eps_low)
 
 
 class IStarLowOU(IStarLowConst):
@@ -48,7 +49,7 @@ class IStarLowOU(IStarLowConst):
 
     @property
     def I_star(self):
-        return self.I_star_(S=1, X=conf.Xs, eps=conf.eps_low)
+        return self.I_star_(S=1, X=conf.Xs, eps=library.models.model_params.eps_low)
 
 
 class IStarModerateOU(IStarLowConst):
@@ -57,7 +58,7 @@ class IStarModerateOU(IStarLowConst):
 
     @property
     def I_star(self):
-        return self.I_star_(S=conf.Ss, X=conf.Xs, eps=conf.eps_moderate)
+        return self.I_star_(S=conf.Ss, X=conf.Xs, eps=library.models.model_params.eps_moderate)
 
 
 class IStarModerateConst(IStarLowConst):
@@ -66,7 +67,7 @@ class IStarModerateConst(IStarLowConst):
 
     @property
     def I_star(self):
-        return self.I_star_(S=conf.Ss, X=conf.X_bar, eps=conf.eps_moderate)
+        return self.I_star_(S=conf.Ss, X=library.models.model_params.X_bar, eps=library.models.model_params.eps_moderate)
 
 # class IStarLowOU:
 #     def __init__(self, alpha_star: Union[float, np.array], eps: float, T, gamma):

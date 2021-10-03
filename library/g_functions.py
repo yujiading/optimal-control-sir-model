@@ -3,6 +3,7 @@ import math
 import numpy as np
 import scipy.integrate as integrate
 
+import library.models.model_params
 from library import conf
 from library.H_functions import HFunctions
 
@@ -39,13 +40,14 @@ class GFunctions:
             tau - t)
 
         #         print('V_Y has approx. error: ', integral[1])
-        return conf.sigma_x ** 2 * 4 * HFunctions.theta(gamma=self.gamma) ** 2 * integral[0]
+        return library.models.model_params.sigma_x ** 2 * 4 * HFunctions.theta(gamma=self.gamma) ** 2 * integral[0]
 
     def _m_Y(self, t, tau, X_t):
         a2 = X_t * self._M(t, tau) + integrate.quad(
             lambda x: self._M(x, tau) *
-                      (conf.lambda_x * conf.X_bar + conf.sigma_x ** 2 / self.gamma * HFunctions.A_2(tau=tau - x,
-                                                                                                    gamma=self.gamma)),
+                      (
+                                  library.models.model_params.lambda_x * library.models.model_params.X_bar + library.models.model_params.sigma_x ** 2 / self.gamma * HFunctions.A_2(tau=tau - x,
+                                                                                                                                                                                    gamma=self.gamma)),
             t, tau)[0]
         a3 = HFunctions.A_2(tau=self.T - tau, gamma=self.gamma) / HFunctions.A_1(tau=self.T -
                                                                                      tau, gamma=self.gamma)
@@ -55,7 +57,7 @@ class GFunctions:
         if 1 - 2 * self._V_Y(t=t, tau=x, X_t=X_t) * HFunctions.A_1(
                 tau=self.T - x, gamma=self.gamma) / self.gamma > 0:
             a1 = HFunctions.H(i=2, gamma=self.gamma, tau=x - t,
-                              X_t=X_t) / 2 * conf.beta ** 2 / conf.sigma_s ** 2 / self.gamma / (
+                              X_t=X_t) / 2 * library.models.model_params.beta ** 2 / library.models.model_params.sigma_s ** 2 / self.gamma / (
                          1 - 2 * self._V_Y(t=t, tau=x, X_t=X_t) *
                          HFunctions.A_1(tau=self.T - x, gamma=self.gamma) / self.gamma) ** 0.5
             a2 = math.exp(2 * HFunctions.A_3(tau=self.T - x, gamma=self.gamma) / self.gamma -
@@ -68,7 +70,7 @@ class GFunctions:
         else:
             a1 = HFunctions.H(i=2, gamma=self.gamma,
                               tau=x - t,
-                              X_t=X_t) / 2 * conf.beta ** 2 / conf.sigma_s ** 2 / self.gamma / (
+                              X_t=X_t) / 2 * library.models.model_params.beta ** 2 / library.models.model_params.sigma_s ** 2 / self.gamma / (
                          2 * math.pi * self._V_Y(t=t, tau=x, X_t=X_t)) ** 0.5
 
             coef1 = round(HFunctions.A_1(tau=self.T - x, gamma=self.gamma) / self.gamma, 4)

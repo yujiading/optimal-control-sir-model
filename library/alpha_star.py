@@ -1,30 +1,35 @@
-import numpy as np
 import math
+from abc import ABC, abstractmethod
+
+import numpy as np
 
 import library.models.model_params
-from library.models import model_params
-from library import conf
 from library.H_functions import HFunctions, SimpleHFunctions
 from library.I_functions import IFunctions
 from library.g_functions import GFunctions
+from library.models import model_params
 
 
-class AlphaStarLowConst:
+class BaseModelAlphaStar(ABC):
     def __init__(self, gamma, T=None):
-        self.gamma = gamma
-
-    def get_alpha_star(self, Xs, Ss, Is):
-        ret = (library.models.model_params.k1_bar - library.models.model_params.K0) \
-              / library.models.model_params.sigma ** 2 / abs(self.gamma)
-        return min(1, max(0, ret))
-
-
-class AlphaStarLowOU:
-    def __init__(self, T, gamma):
         self.gamma = gamma
         self.T = T
 
-    def get_alpha_star(self, Xs, Ss, Is):
+    @abstractmethod
+    def get_alpha_star(self, Xs, Ss, Is, length) -> np.ndarray:
+        pass
+
+
+class AlphaStarLowConst(BaseModelAlphaStar):
+    def get_alpha_star(self, Xs, Ss, Is, length) -> np.ndarray:
+        ret = (library.models.model_params.k1_bar - library.models.model_params.K0) \
+              / library.models.model_params.sigma ** 2 / abs(self.gamma)
+        alpha_star_ = [min(1, max(0, ret))] * length
+        return np.array(alpha_star_)
+
+
+class AlphaStarLowOU(BaseModelAlphaStar):
+    def get_alpha_star(self, Xs, Ss, Is, length) -> np.ndarray:
         alpha_star_ = []
         length = len(Is)
         for t in range(length):
@@ -36,11 +41,7 @@ class AlphaStarLowOU:
         return np.array(alpha_star_)
 
 
-class AlphaStarModerateOU:
-    def __init__(self, T, gamma):
-        self.gamma = gamma
-        self.T = T
-
+class AlphaStarModerateOU(BaseModelAlphaStar):
     def _A11_X_A12(self, t, X_t):
         return HFunctions.A_1(gamma=self.gamma, tau=self.T - t * model_params.dt) * X_t + HFunctions.A_2(
             gamma=self.gamma, tau=self.T - t * model_params.dt)
@@ -92,18 +93,13 @@ class AlphaStarModerateOU:
             alpha1.append(a1 * a2)
         return np.array(alpha1)
 
-    def get_alpha_star(self, Xs, Ss, Is):
-        length = len(Is)
+    def get_alpha_star(self, Xs, Ss, Is, length) -> np.ndarray:
         alpha0 = self._get_alpha0(Xs=Xs, length=length)
         alpha1 = self._get_alpha1(Xs=Xs, Ss=Ss, Is=Is, length=length)
         return alpha0 + library.models.model_params.eps_moderate * alpha1 + library.models.model_params.eps_moderate ** 2
 
 
-class AlphaStarModerateConst:
-    def __init__(self, T, gamma):
-        self.gamma = gamma
-        self.T = T
-
+class AlphaStarModerateConst(BaseModelAlphaStar):
     @property
     def _alpha0(self):
         return library.models.model_params.X_bar / self.gamma / library.models.model_params.sigma
@@ -127,7 +123,6 @@ class AlphaStarModerateConst:
             alpha1.append(a1 * a2)
         return np.array(alpha1)
 
-    def get_alpha_star(self, Xs, Ss, Is):
-        length = len(Is)
+    def get_alpha_star(self, Xs, Ss, Is, length) -> np.ndarray:
         alpha1 = self._get_alpha1(Ss=Ss, Is=Is, length=length)
         return self._alpha0 + library.models.model_params.eps_moderate * alpha1 + library.models.model_params.eps_moderate ** 2

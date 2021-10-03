@@ -80,14 +80,14 @@ class Driver:
         with Pool(self.run_config.cpu) as p:
             ret = list(
                 tqdm(p.imap(partial(self.get_I_star_utility_dict, Xs=Xs, Ss=Ss, Is=Is),
-                            [gamma] * self.run_config.n_trials_monte_carlo),
-                     total=self.run_config.n_trials_monte_carlo))
+                            [gamma] * self.run_config.n_trials_monte_carlo_simulation),
+                     total=self.run_config.n_trials_monte_carlo_simulation))
         I_list = [item[0] for item in ret]
         Utility_list = [item[1] for item in ret]
         I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
-        I = I / self.run_config.n_trials_monte_carlo
+        I = I / self.run_config.n_trials_monte_carlo_simulation
         Utility = reduce(lambda a, b: a.add(b, fill_value=0), Utility_list)
-        Utility = Utility / self.run_config.n_trials_monte_carlo
+        Utility = Utility / self.run_config.n_trials_monte_carlo_simulation
         return I, Utility
 
     # def get_I_star_utility_dict_simulation(self, gamma, data):
@@ -120,14 +120,14 @@ class Driver:
         # generate simulated data
         data_simulation = self.simulation_dict[self.run_config.model]
         data = data_simulation(I0=self.run_config.I0, X0=self.run_config.X0, S0=self.run_config.S0,
-                               n_steps=self.run_config.n_steps_simulation_data_generation,
-                               n_trials=self.run_config.n_trials_simulation_data_generation)
+                               n_steps=self.run_config.n_steps_simulated_data_generation,
+                               n_trials=self.run_config.n_trials_simulated_data_generation)
         if not hasattr(data, 'Ss_trials'):
-            data.Ss_trials = np.zeros((self.run_config.n_trials_simulation_data_generation,
-                                       self.run_config.n_steps_simulation_data_generation))
+            data.Ss_trials = np.zeros((self.run_config.n_trials_simulated_data_generation,
+                                       self.run_config.n_steps_simulated_data_generation))
         if not hasattr(data, 'Is_trials'):
-            data.Is_trials = np.zeros((self.run_config.n_trials_simulation_data_generation,
-                                       self.run_config.n_steps_simulation_data_generation))
+            data.Is_trials = np.zeros((self.run_config.n_trials_simulated_data_generation,
+                                       self.run_config.n_steps_simulated_data_generation))
         dataset = list(zip(list(data.Xs_trials), list(data.Ss_trials), list(data.Is_trials)))
 
         # simulate for no control
@@ -149,15 +149,15 @@ class Driver:
             gamma_to_results[gamma] = (I, Utility)
 
             simulator = BaseSimulator()
-            simulation_result = simulator.run_simulation(alpha_star=model_params.eps)
+            simulation_result = simulator.run_monte_carlo_simulation(alpha_star=model_params.eps)
 
             # simulate for full control
             simulator = BaseSimulator()
-            simulation_result = simulator.run_simulation(alpha_star=1)
+            simulation_result = simulator.run_monte_carlo_simulation(alpha_star=1)
 
             # simulate for optimal control
             simulator = BaseSimulator()
-            model_result = simulator.run_model_and_simulation(Xs=Xs, Ss=Ss, Is=Is)
+            model_result = simulator.run_model_and_monte_carlo_simulation(Xs=Xs, Ss=Ss, Is=Is)
 
             # combine results for gamma
             pass

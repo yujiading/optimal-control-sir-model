@@ -24,7 +24,7 @@ class SimulationResult:
 @dataclass
 class ModelResult:
     model_type: str
-    alpha_star: Union[pd.Series, float]
+    alpha_star: np.ndarray
     simulation_result: SimulationResult
 
     @staticmethod

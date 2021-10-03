@@ -123,6 +123,8 @@ class DataLowOU:
                 next_X = self.next_X(last_X=last_X, last_dB2=last_dB2)
                 next_I = self.next_I(last_I=last_I, last_X=last_X, last_dB2=last_dB2)
                 # if next_X < 0 and (0 <= next_I <= 1) and next_X > -1:
+                if next_I <= 0:
+                    next_I = 0
                 Is.append(next_I)
                 Xs.append(next_X)
                 dB2.append(last_dB2)

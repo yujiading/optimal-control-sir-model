@@ -14,6 +14,7 @@ from library.data_simulation import DataModerateOU, DataLowOU, DataLowConst, Dat
 
 class Driver:
     def __init__(self, model, gammas, T, is_simulation: bool = True, X0=None, I0=None, S0=None, cpu: int = 8,
+                 n_trials_data_generation: int = 1,
                  n_trials: int = 1000, n_steps: int = 20, is_include_optimal_control: bool = True,
                  is_include_full_control: bool = True,
                  is_include_no_control: bool = True):
@@ -28,6 +29,7 @@ class Driver:
         self.I0 = I0
         self.S0 = S0
         self.cpu = cpu
+        self.n_trials_data_generation = n_trials_data_generation
         self.n_trials = n_trials
         self.n_steps = n_steps
         self.is_include_optimal_control = is_include_optimal_control
@@ -89,12 +91,24 @@ class Driver:
             I[f'Full Control'] = I_full
             Utility[f'Full Control'] = Driver.utility(I=I_full, gamma=gamma)
         if self.is_include_no_control:
-            I_no = conf.Is
+            I_no = self.get_I_star(alpha_star=0)
             I['No Control'] = I_no
             Utility[f'No Control'] = Driver.utility(I=I_no, gamma=gamma)
         return I, Utility
 
-    def parallel_helper(self, data_elm, gamma):
+    def get_expected_I_star_utility_dict(self, gamma):
+        with Pool(self.cpu) as p:
+            ret = list(
+                tqdm(p.imap(partial(self.get_I_star_utility_dict), [gamma] * self.n_trials), total=self.n_trials))
+        I_list = [item[0] for item in ret]
+        Utility_list = [item[1] for item in ret]
+        I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
+        I = I / self.n_trials
+        Utility = reduce(lambda a, b: a.add(b, fill_value=0), Utility_list)
+        Utility = Utility / self.n_trials
+        return I, Utility
+
+    def simulation_parallel_helper(self, data_elm, gamma):
         """
         data: [(Xs_trials, Ss_trials, Is_trials), ...]
         """
@@ -103,39 +117,48 @@ class Driver:
         conf.dIs = conf.Is[1:] - conf.Is[:-1]
         conf.dSs = conf.Ss[1:] - conf.Ss[:-1]
         conf.dXs = conf.Xs[1:] - conf.Xs[:-1]
-        I, Utility = self.get_I_star_utility_dict(gamma=gamma)
+        I, Utility = self.get_expected_I_star_utility_dict(gamma=gamma)
         return I, Utility
 
     def get_I_star_utility_dict_simulation(self, gamma, data):
         """
-        data: [(data.Xs_trials, data.Ss_trials , data.Is_trials), ... ]
+        Get all lines for a given gamma
+        data: [(data.Xs_trials, data.Ss_trials , data.Is_trials), ... ]. Length is 1 for monte carlo
         """
-        paralell = True
+        paralell = False
+        I_list = []
+        Utility_list = []
         if paralell:
-            trials = list(range(self.n_trials))
             with Pool(self.cpu) as p:
-                ret = list(tqdm(p.imap(partial(self.parallel_helper, gamma=gamma), data), total=self.n_trials))
+                ret = list(tqdm(p.imap(partial(self.simulation_parallel_helper, gamma=gamma), data),
+                                total=self.n_trials_data_generation))
             I_list = [item[0] for item in ret]
             Utility_list = [item[1] for item in ret]
-            I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
-            I = I / self.n_trials
-            Utility = reduce(lambda a, b: a.add(b, fill_value=0), Utility_list)
-            Utility = Utility / self.n_trials
         else:
-            pass
+            for data_elm in data:
+                I, Utility = self.simulation_parallel_helper(data_elm=data_elm, gamma=gamma)
+                I_list.append(I)
+                Utility_list.append(Utility)
+
+        I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
+        I = I / self.n_trials_data_generation
+        Utility = reduce(lambda a, b: a.add(b, fill_value=0), Utility_list)
+        Utility = Utility / self.n_trials_data_generation
         return I, Utility
 
     def plot(self):
         infection_type = self.infection_type_dict[self.model]
         treatment_type = self.treatment_type_dict[self.model]
         data_simulation = self.simulation_dict[self.model]
-        data = data_simulation(I0=self.I0, X0=self.X0, S0=self.S0, n_steps=self.n_steps, n_trials=self.n_trials)
+        data = data_simulation(I0=self.I0, X0=self.X0, S0=self.S0, n_steps=self.n_steps,
+                               n_trials=self.n_trials_data_generation)
         if not hasattr(data, 'Ss_trials'):
-            data.Ss_trials = np.zeros((self.n_trials, self.n_steps))
+            data.Ss_trials = np.zeros((self.n_trials_data_generation, self.n_steps))
         if not hasattr(data, 'Is_trials'):
-            data.Is_trials = np.zeros((self.n_trials, self.n_steps))
+            data.Is_trials = np.zeros((self.n_trials_data_generation, self.n_steps))
         dataset = list(zip(list(data.Xs_trials), list(data.Ss_trials), list(data.Is_trials)))
         # data = DataModerateOU(I0=I0, X0=X0, S0=S0, n_steps=n_steps, n_trials=n_trials)
+
         styles = ['C0o-.', 'C1*:', 'C2<-.', 'C3>-.', 'C4^-.', 'C5-', 'C6--']
         fig, axes = plt.subplots(nrows=len(self.gammas), ncols=2)
         if self.is_simulation:
@@ -153,6 +176,7 @@ class Driver:
             if i > 0:
                 subtitle_I = None
                 subtitle_utility = None
+            I['simulated'] = list(data.Is_trials)[0]
             I.plot(ax=axes[i, 0], style=styles, legend=False, title=subtitle_I, sharex=True)
             axes[i, 0].set_ylabel('$\\gamma=$' + str(gamma))
             Utility.plot(ax=axes[i, 1], style=styles, legend=False, title=subtitle_utility)

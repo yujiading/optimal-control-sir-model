@@ -16,7 +16,7 @@ dSs = Ss[1:] - Ss[:-1]
 dXs = Xs[1:] - Xs[:-1]
 length = len(Is)
 # alpha_fix = 1
-alpha_fix = 0
+alpha_fix = 0.25
 
 # dataset 2
 sigma_k = -1.164695  # 5.876383  # Volatility of changes in the recovery rate

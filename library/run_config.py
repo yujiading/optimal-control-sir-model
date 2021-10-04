@@ -10,7 +10,8 @@ class RunConfig:
     T = 1
     X0 = model_params.X0
     I0 = model_params.eps
-    S0 = model_params.S0
+    S0 = 0.7
+    alpha_fix = 0.25
     is_parallel = True
     cpu: int = 8
     is_include_optimal_control: bool = True
@@ -23,3 +24,5 @@ class RunConfig:
     # seed: int = None  # Set to None to turn off seeding
     n_trials_monte_carlo_simulation: int = 50
     seed: int = 0  # Set to None to turn off seeding
+
+

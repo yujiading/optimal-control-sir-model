@@ -1,5 +1,4 @@
 # alpha_fix = 1
-alpha_fix = 0.25
 
 # dataset 2
 sigma_k = -1.164695  # 5.876383  # Volatility of changes in the recovery rate
@@ -41,7 +40,7 @@ r = beta - mu
 
 X0 = (K0 + mu0 - mu1 - K1_0) / sigma
 eps = 0.01
-S0 = 0.7
+
 
 
 

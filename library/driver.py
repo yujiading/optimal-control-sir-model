@@ -5,15 +5,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import ScalarFormatter
 from tqdm import tqdm
+from typing import Type
 
 from library import conf
 from library.I_star import IStarLowConst, IStarLowOU, IStarModerateOU, IStarModerateConst
 from library.alpha_star import AlphaStarLowConst, AlphaStarLowOU, AlphaStarModerateOU, AlphaStarModerateConst
 from library.data_simulation import DataModerateOU, DataLowOU, DataLowConst, DataModerateConst
-from models.model_mapper import ModelTypes, VariableNames, model_class_map
+from library.models.base_simulator import BaseSimulator
+from library.models.low_simulators import LowOUSimulator, LowConstSimulator
+from library.models.moderate_simulators import ModerateOUSimulator, ModerateConstSimulator
+from models.model_mapper import ModelTypes, VariableNames
 from models import model_params
 from plot_generator import PlotGenerator
 from run_config import RunConfig
+from library.models.model_result import ModelResult
 
 
 class Driver:
@@ -23,32 +28,12 @@ class Driver:
         """
         self.run_config = run_config
 
-        self.simulation_dict = {"LowConst": DataLowConst,
-                                "LowOU": DataLowOU,
-                                "ModerateConst": DataModerateConst,
-                                "ModerateOU": DataModerateOU}
-
-    @staticmethod
-    def utility(I, gamma):
-        return -I ** (1 - gamma) / (1 - gamma)
-
-    def get_alpha_star(self, gamma, Xs, Ss, Is):
-        model_class_alpha = model_class_map[self.run_config.model][VariableNames.AlphaStar]
-        model_obj_alpha = model_class_alpha(gamma=gamma, T=self.run_config.T)
-        alpha_star = model_obj_alpha.get_alpha_star(Xs=Xs, Ss=Ss, Is=Is)
-        # if conf.is_simulation:
-        #     alpha_star[alpha_star < 0] = 0
-        #     alpha_star[alpha_star > 1] = 1
-        # alpha_star = np.array(len(alpha_star)*[1.25])
-        return alpha_star
-
-    def get_I_star(self, alpha_star, Xs, Ss):
-        if self.run_config.seed is not None:
-            np.random.seed(self.run_config.seed)
-        model_class_I = model_class_map[self.run_config.model][VariableNames.IStar]
-        model_obj_I = model_class_I(alpha_star=alpha_star)
-        I_star = model_obj_I.get_I_star(Xs=Xs, Ss=Ss)
-        return I_star
+        self.simulation_dict = {
+            "LowConst": LowConstSimulator,
+            "LowOU": LowOUSimulator,
+            "ModerateConst": ModerateConstSimulator,
+            "ModerateOU": ModerateOUSimulator
+        }
 
     def get_I_star_utility_dict(self, gamma, Is, Xs, Ss):
         I = pd.DataFrame()
@@ -72,96 +57,57 @@ class Driver:
             Utility[f'No Control'] = Driver.utility(I=I_no, gamma=gamma)
         return I, Utility
 
-    def get_expected_I_star_utility_dict(self, gamma, data_elm):
-        Xs, Ss, Is = data_elm
-        # dIs = Is[1:] - Is[:-1]
-        # dSs = Ss[1:] - Ss[:-1]
-        # dXs = Xs[1:] - Xs[:-1]
-        with Pool(self.run_config.cpu) as p:
-            ret = list(
-                tqdm(p.imap(partial(self.get_I_star_utility_dict, Xs=Xs, Ss=Ss, Is=Is),
-                            [gamma] * self.run_config.n_trials_monte_carlo_simulation),
-                     total=self.run_config.n_trials_monte_carlo_simulation))
-        I_list = [item[0] for item in ret]
-        Utility_list = [item[1] for item in ret]
-        I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
-        I = I / self.run_config.n_trials_monte_carlo_simulation
-        Utility = reduce(lambda a, b: a.add(b, fill_value=0), Utility_list)
-        Utility = Utility / self.run_config.n_trials_monte_carlo_simulation
-        return I, Utility
-
-    # def get_I_star_utility_dict_simulation(self, gamma, data):
-    #     """
-    #     Get all lines for a given gamma
-    #     data: [(data.Xs_trials, data.Ss_trials , data.Is_trials), ... ]. Length is 1 for monte carlo
-    #     """
-    #     paralell = False
-    #     I_list = []
-    #     Utility_list = []
-    #     if paralell:
-    #         with Pool(self.run_config.cpu) as p:
-    #             ret = list(tqdm(p.imap(partial(self.simulation_parallel_helper, gamma=gamma), data),
-    #                             total=self.run_config.n_trials_data_generation))
-    #         I_list = [item[0] for item in ret]
-    #         Utility_list = [item[1] for item in ret]
-    #     else:
-    #         for data_elm in data:
-    #             I, Utility = self.simulation_parallel_helper(data_elm=data_elm, gamma=gamma)
-    #             I_list.append(I)
-    #             Utility_list.append(Utility)
-    #
-    #     I = reduce(lambda a, b: a.add(b, fill_value=0), I_list)
-    #     I = I / self.run_config.n_trials_data_generation
-    #     Utility = reduce(lambda a, b: a.add(b, fill_value=0), Utility_list)
-    #     Utility = Utility / self.run_config.n_trials_data_generation
-    #     return I, Utility
-
     def run(self):
-        # generate simulated data
-        data_simulation = self.simulation_dict[self.run_config.model]
-        data = data_simulation(I0=self.run_config.I0, X0=self.run_config.X0, S0=self.run_config.S0,
-                               n_steps=self.run_config.n_steps_simulated_data_generation,
-                               n_trials=self.run_config.n_trials_simulated_data_generation)
-        if not hasattr(data, 'Ss_trials'):
-            data.Ss_trials = np.zeros((self.run_config.n_trials_simulated_data_generation,
-                                       self.run_config.n_steps_simulated_data_generation))
-        if not hasattr(data, 'Is_trials'):
-            data.Is_trials = np.zeros((self.run_config.n_trials_simulated_data_generation,
-                                       self.run_config.n_steps_simulated_data_generation))
-        dataset = list(zip(list(data.Xs_trials), list(data.Ss_trials), list(data.Is_trials)))
 
-        # simulate for no control
+        # get dataset for modeling Xs, Is, Ss
+        if self.run_config.is_simulation:
+            simulator_class: Type[BaseSimulator] = self.simulation_dict[self.run_config.model]
+            simulator = simulator_class(gamma=-1, run_config=self.run_config)
+            simulation_result = simulator.simulate_one_trial(alpha_star=np.array(
+                [self.run_config.alpha_fix] * self.run_config.n_steps_simulated_data_generation))
+            Xs = simulation_result.Xs
+            Is = simulation_result.Is
+            Ss = simulation_result.Ss
+        else:
+            Xs = np.array(conf.real_world_data['X(t)'])
+            # ts = np.array(conf.real_world_data['t'])
+            Is = np.array(conf.real_world_data['I(t)'])
+            Ss = np.array(conf.real_world_data['S(t)'])
+
         gamma_to_results = {}
         for gamma in self.run_config.gammas:
-            if self.run_config.is_simulation:
-                I, Utility = self.get_expected_I_star_utility_dict(gamma=gamma, data_elm=dataset[0])
-            else:
-                Xs = np.array(conf.real_world_data['X(t)'])
-                # ts = np.array(conf.real_world_data['t'])
-                Is = np.array(conf.real_world_data['I(t)'])
-                Ss = np.array(conf.real_world_data['S(t)'])
-                I, Utility = self.get_I_star_utility_dict(
-                    gamma=gamma,
-                    Is=Is,
-                    Xs=Xs,
-                    Ss=Ss
-                )
-            gamma_to_results[gamma] = (I, Utility)
+            # simulate for no control
+            simulator_class: Type[BaseSimulator] = self.simulation_dict[self.run_config.model]
+            simulator = simulator_class(gamma=gamma, run_config=self.run_config)
 
-            simulator = BaseSimulator()
-            simulation_result = simulator.run_monte_carlo_simulation(alpha_star=model_params.eps)
+            # simulate for no control
+            alpha_star = np.array([model_params.eps] * len(Xs))
+            no_control_simulation_result, _ = simulator.run_monte_carlo_simulation(alpha_star=alpha_star)
+            no_control_model_result = ModelResult(
+                model_type=self.run_config.model,
+                alpha_star=alpha_star,
+                average_simulation_result=no_control_simulation_result
+            )
 
             # simulate for full control
-            simulator = BaseSimulator()
-            simulation_result = simulator.run_monte_carlo_simulation(alpha_star=1)
+            alpha_star = np.array([1] * len(Xs))
+            full_control_simulation_result, _ = simulator.run_monte_carlo_simulation(alpha_star=alpha_star)
+            full_control_model_result = ModelResult(
+                model_type=self.run_config.model,
+                alpha_star=alpha_star,
+                average_simulation_result=full_control_simulation_result
+            )
 
             # simulate for optimal control
-            simulator = BaseSimulator()
-            model_result = simulator.run_model_and_monte_carlo_simulation(Xs=Xs, Ss=Ss, Is=Is)
+            optimal_control_model_result = simulator.run_model_and_monte_carlo_simulation(
+                Xs=Xs, Ss=Ss, Is=Is)
 
             # combine results for gamma
-            pass
-            gamma_to_results[gamma] = None
+            gamma_to_results[gamma] = {
+                'Optimal Control': optimal_control_model_result,
+                'Full Control': full_control_model_result,
+                'No Control': no_control_model_result
+            }
 
         # plot
         plot_generator = PlotGenerator()
@@ -177,21 +123,22 @@ def run():
     """
     model takes values: 'LowConst', 'LowOU', 'ModerateConst', 'ModerateOU'
     """
-    run_config = RunConfig(ModelTypes.LowConst)
-    driver = Driver(run_config=run_config)
-    driver.run()
+    for is_simulation in [True]:
+        run_config = RunConfig(model=ModelTypes.LowConst, is_simulation=is_simulation)
+        driver = Driver(run_config=run_config)
+        driver.run()
 
-    # run_config = RunConfig(ModelTypes.LowOU)
-    # driver = Driver(run_config=run_config)
-    # driver.run()
-    #
-    # run_config = RunConfig(ModelTypes.ModerateConst)
-    # driver = Driver(run_config=run_config)
-    # driver.run()
-    #
-    # run_config = RunConfig(ModelTypes.ModerateOU)
-    # driver = Driver(run_config=run_config)
-    # driver.run()
+        # run_config = RunConfig(model=ModelTypes.LowOU, is_simulation=is_simulation)
+        # driver = Driver(run_config=run_config)
+        # driver.run()
+        #
+        # run_config = RunConfig(model=ModelTypes.ModerateConst, is_simulation=is_simulation)
+        # driver = Driver(run_config=run_config)
+        # driver.run()
+        #
+        # run_config = RunConfig(model=ModelTypes.ModerateOU, is_simulation=is_simulation)
+        # driver = Driver(run_config=run_config)
+        # driver.run()
 
 
 if __name__ == '__main__':

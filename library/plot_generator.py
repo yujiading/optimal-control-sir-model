@@ -10,8 +10,9 @@ from library import conf
 from library.I_star import IStarLowConst, IStarLowOU, IStarModerateOU, IStarModerateConst
 from library.alpha_star import AlphaStarLowConst, AlphaStarLowOU, AlphaStarModerateOU, AlphaStarModerateConst
 from library.data_simulation import DataModerateOU, DataLowOU, DataLowConst, DataModerateConst
-from models.model_mapper import ModelTypes, VariableNames, model_class_map
+from models.model_mapper import ModelTypes, VariableNames
 from typing import List, Dict
+from library.models.model_result import SimulationResult, ModelResult
 
 
 class PlotGenerator:
@@ -42,13 +43,17 @@ class PlotGenerator:
         else:
             subtitle_I = f"Infection: $I(t)$"
             subtitle_utility = "Utility: $-\\frac{I(t)^{1-\\gamma}}{1-\\gamma}$"
-
+        axes[0, 0].set_title(subtitle_I)
+        axes[0, 1].set_title(subtitle_utility)
         for i, gamma in enumerate(gammas):
-            I, Utility = gamma_to_results[gamma]
+            results_dict = gamma_to_results[gamma]
+            result_keys = ['Optimal Control', 'Full Control', 'No Control']
+            for result_key in result_keys:
+                model_result: ModelResult = results_dict[result_key]
+                axes[i, 0].plot(model_result.average_simulation_result.Is, label=result_key)
+                axes[i, 1].plot(model_result.average_simulation_result.Utility, label=result_key)
 
-            I.plot(ax=axes[i, 0], style=styles, legend=False, title=subtitle_I, sharex=True)
             axes[i, 0].set_ylabel('$\\gamma=$' + str(gamma))
-            Utility.plot(ax=axes[i, 1], style=styles, legend=False, title=subtitle_utility)
             yfmt = ScalarFormatterForceFormat()
             yfmt.set_powerlimits((0, 0))
             axes[i, 0].yaxis.set_major_formatter(yfmt)

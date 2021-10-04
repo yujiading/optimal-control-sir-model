@@ -1,6 +1,7 @@
 import numpy as np
 
 import library.models.model_params
+import library.run_config
 from library import conf
 import math
 
@@ -21,17 +22,19 @@ class DataModerateOU:
 
     def next_X(self, last_X, last_dB2):
         ret = last_X + library.models.model_params.lambda_x * (
-                    library.models.model_params.X_bar - last_X) * library.models.model_params.dt - library.models.model_params.sigma_x * last_dB2
+                library.models.model_params.X_bar - last_X) * library.models.model_params.dt - library.models.model_params.sigma_x * last_dB2
         return ret[0]
 
     def next_S(self, last_S, last_I, last_dB1):
-        ret = last_S - library.models.model_params.beta * last_S * last_I * library.models.model_params.dt + library.models.model_params.sigma_s * math.sqrt(last_S * last_I) * last_dB1
+        ret = last_S - library.models.model_params.beta * last_S * last_I * library.models.model_params.dt + library.models.model_params.sigma_s * math.sqrt(
+            last_S * last_I) * last_dB1
         return ret[0]
 
     def next_I(self, last_I, last_S, last_X, last_dB1, last_dB2):
         ret = last_I + (
-                    library.models.model_params.beta * last_S - library.models.model_params.mu + library.models.model_params.alpha_fix * library.models.model_params.sigma * last_X) * last_I * library.models.model_params.dt \
-              + library.models.model_params.alpha_fix * last_I * library.models.model_params.sigma * last_dB2 - library.models.model_params.sigma_s * math.sqrt(last_S * last_I) * last_dB1
+                library.models.model_params.beta * last_S - library.models.model_params.mu + library.run_config.alpha_fix * library.models.model_params.sigma * last_X) * last_I * library.models.model_params.dt \
+              + library.run_config.alpha_fix * last_I * library.models.model_params.sigma * last_dB2 - library.models.model_params.sigma_s * math.sqrt(
+            last_S * last_I) * last_dB1
         return ret[0]
 
     @property
@@ -102,15 +105,16 @@ class DataLowOU:
         self.Xs_trials = None
         self.Is_trials = None
         self.get_data()
+
     def next_X(self, last_X, last_dB2):
         ret = last_X + library.models.model_params.lambda_x * (
-                    library.models.model_params.X_bar - last_X) * library.models.model_params.dt - library.models.model_params.sigma_x * last_dB2
+                library.models.model_params.X_bar - last_X) * library.models.model_params.dt - library.models.model_params.sigma_x * last_dB2
         return ret
 
     def next_I(self, last_I, last_X, last_dB2):
         ret = last_I + (
-                    library.models.model_params.r + library.models.model_params.alpha_fix * library.models.model_params.sigma * last_X) * last_I * library.models.model_params.dt \
-              + library.models.model_params.alpha_fix * last_I * library.models.model_params.sigma * last_dB2
+                library.models.model_params.r + library.run_config.alpha_fix * library.models.model_params.sigma * last_X) * last_I * library.models.model_params.dt \
+              + library.run_config.alpha_fix * last_I * library.models.model_params.sigma * last_dB2
         return ret
 
     @property
@@ -134,7 +138,7 @@ class DataLowOU:
                 Xs.append(next_X)
                 dB2.append(last_dB2)
                 break
-        # print(f'db2 {dB2}')
+        # print(f'dB2 {dB2}')
         return Is, Xs, dB2
 
     def get_data(self):

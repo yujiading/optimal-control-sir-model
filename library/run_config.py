@@ -21,8 +21,8 @@ class RunConfig:
     is_include_full_control: bool = True
     is_include_no_control: bool = True
     is_simulation: bool = True
-    n_trials_simulated_data_generation: int = 1
-    n_steps_simulated_data_generation: int = 500
+    n_trials_simulated_data_generation: int = 10
+    n_steps_simulated_data_generation: int = 100
     # seed: int = None  # Set to None to turn off seeding
-    n_trials_monte_carlo_simulation: int = 10000
+    n_trials_monte_carlo_simulation: int = 1000
     # seed: int = 0  # Set to None to turn off seeding

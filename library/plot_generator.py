@@ -49,11 +49,13 @@ class PlotGenerator:
                     label=result_key,
                     linestyle=result_key_to_line_style[result_key]
                 )
+                # axes[i, 0].set_yscale('symlog')
                 axes[i, 1].plot(
                     model_result.average_simulation_result.Utility,
                     label=result_key,
                     linestyle=result_key_to_line_style[result_key]
                 )
+                # axes[i, 1].set_yscale('symlog')
 
             axes[i, 0].set_ylabel('$\\gamma=$' + str(gamma))
             yfmt = ScalarFormatterForceFormat()

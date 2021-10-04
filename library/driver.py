@@ -76,7 +76,7 @@ class Driver:
                 simulator = simulator_class(gamma=gamma, run_config=self.run_config)
 
                 # simulate for no control
-                alpha_star = np.array([model_params.eps] * len(Xs))
+                alpha_star = np.array([0.0001] * len(Xs))
                 no_control_simulation_result, _ = simulator.run_monte_carlo_simulation(alpha_star=alpha_star)
                 no_control_model_result = ModelResult(
                     model_type=self.run_config.model,

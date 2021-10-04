@@ -70,7 +70,7 @@ class PlotGenerator:
 
         # Format plot
         fig.set_size_inches(8, 10.5)
-        fig.subplots_adjust(left=0.1, bottom=0.15, right=0.95, top=0.9, wspace=0.3, hspace=0.4)
+        fig.subplots_adjust(left=0.1, bottom=0.13, right=0.95, top=0.92, wspace=0.3, hspace=0.6)
         fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
         plt.suptitle(f'{infection_type} Infection Regime with {treatment_type} Treatment', x=0.5)
         plt.show()

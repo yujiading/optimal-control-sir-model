@@ -1,18 +1,7 @@
-from functools import partial, reduce
-from multiprocessing import Pool
-import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 from matplotlib.ticker import ScalarFormatter
-from tqdm import tqdm
+
 from library.models.model_result import ModelResult
-from library import conf
-from library.I_star import IStarLowConst, IStarLowOU, IStarModerateOU, IStarModerateConst
-from library.alpha_star import AlphaStarLowConst, AlphaStarLowOU, AlphaStarModerateOU, AlphaStarModerateConst
-from library.data_simulation import DataModerateOU, DataLowOU, DataLowConst, DataModerateConst
-from models.model_mapper import ModelTypes, VariableNames
-from typing import List, Dict
-from library.models.model_result import SimulationResult, ModelResult
 
 
 class PlotGenerator:
@@ -48,10 +37,23 @@ class PlotGenerator:
         for i, gamma in enumerate(gammas):
             results_dict = gamma_to_results[gamma]
             result_keys = ['Optimal Control', 'Full Control', 'No Control']
+            result_key_to_line_style = {
+                'Optimal Control': '-',
+                'Full Control': ':',
+                'No Control': '-.'
+            }
             for result_key in result_keys:
                 model_result: ModelResult = results_dict[result_key]
-                axes[i, 0].plot(model_result.average_simulation_result.Is, label=result_key)
-                axes[i, 1].plot(model_result.average_simulation_result.Utility, label=result_key)
+                axes[i, 0].plot(
+                    model_result.average_simulation_result.Is,
+                    label=result_key,
+                    linestyle=result_key_to_line_style[result_key]
+                )
+                axes[i, 1].plot(
+                    model_result.average_simulation_result.Utility,
+                    label=result_key,
+                    linestyle=result_key_to_line_style[result_key]
+                )
 
             axes[i, 0].set_ylabel('$\\gamma=$' + str(gamma))
             yfmt = ScalarFormatterForceFormat()
@@ -68,7 +70,7 @@ class PlotGenerator:
 
         # Format plot
         fig.set_size_inches(8, 10.5)
-        fig.subplots_adjust(left=0.1, bottom=0.2, right=0.95, top=0.9, wspace=0.3, hspace=0.4)
+        fig.subplots_adjust(left=0.1, bottom=0.15, right=0.95, top=0.9, wspace=0.3, hspace=0.4)
         fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
         plt.suptitle(f'{infection_type} Infection Regime with {treatment_type} Treatment', x=0.5)
         plt.show()

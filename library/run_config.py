@@ -3,12 +3,15 @@ from typing import List
 from models.model_mapper import ModelTypes
 from models import model_params
 
+
 @dataclass
 class RunConfig:
     model: str = ModelTypes.LowOU
-    gammas: List = field(default_factory=lambda: [-1, -5])
+    gammas: List = field(default_factory=lambda: [-1, -2, -3, -4, -5,-6,-7,-8])
+    # gammas: List = field(default_factory=lambda: [-1, -2])
     T = 1
-    X0 = model_params.X0
+    # X0 = model_params.X0
+    X0 = -1
     I0 = model_params.eps
     S0 = 0.7
     alpha_fix = 0.25
@@ -19,10 +22,7 @@ class RunConfig:
     is_include_no_control: bool = True
     is_simulation: bool = True
     n_trials_simulated_data_generation: int = 1
-    n_steps_simulated_data_generation: int = 100
-    # n_trials_monte_carlo: int = 50000
+    n_steps_simulated_data_generation: int = 500
     # seed: int = None  # Set to None to turn off seeding
-    n_trials_monte_carlo_simulation: int = 50
-    seed: int = 0  # Set to None to turn off seeding
-
-
+    n_trials_monte_carlo_simulation: int = 10000
+    # seed: int = 0  # Set to None to turn off seeding

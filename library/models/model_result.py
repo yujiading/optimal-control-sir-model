@@ -44,4 +44,11 @@ class ModelResult:
 
     @staticmethod
     def average_model_results(results: List[ModelResult]) -> ModelResult:
-        pass
+        first_model_result = results[0]
+        all_simulation_results = [model_result.average_simulation_result for model_result in results]
+        model_result = ModelResult(
+            model_type=first_model_result.model_type,
+            alpha_star=None,
+            average_simulation_result=SimulationResult.average_simulation_results(all_simulation_results)
+        )
+        return model_result

@@ -1,8 +1,9 @@
 import math
 from abc import ABC, abstractmethod
-from multiprocessing import Pool
+from multiprocessing import Pool, Array
 from typing import Type, List, Tuple
-
+from functools import partial
+import ctypes
 import numpy as np
 from tqdm import tqdm
 
@@ -79,6 +80,8 @@ class BaseSimulator(ABC):
                                  last_dB1=dB1[i - 1], last_dB2=dB2[i - 1])
             if next_I < 0:
                 next_I = 0
+            if next_S is not None and next_S < 0:
+                next_S = 0
             Ss.append(next_S)
             Is.append(next_I)
             Xs.append(next_X)
@@ -106,15 +109,11 @@ class BaseSimulator(ABC):
         if self.run_config.is_parallel:
             with Pool(self.run_config.cpu) as p:
                 simulation_results = list(
-                    tqdm(iterable=p.imap(self.simulate_one_trial,
-                                         [alpha_star] * self.run_config.n_trials_monte_carlo_simulation),
-                         total=self.run_config.n_trials_monte_carlo_simulation
-                         ))
+                    p.map(self.simulate_one_trial,
+                           [alpha_star] * self.run_config.n_trials_monte_carlo_simulation),
+                )
         else:
-            for i in tqdm(
-                    iterable=range(self.run_config.n_trials_monte_carlo_simulation),
-                    total=self.run_config.n_trials_monte_carlo_simulation
-            ):
+            for i in range(self.run_config.n_trials_monte_carlo_simulation):
                 simulation_result = self.simulate_one_trial(alpha_star=alpha_star)
                 simulation_results.append(simulation_result)
         average_simulation_result = SimulationResult.average_simulation_results(simulation_results)
@@ -127,6 +126,7 @@ class BaseSimulator(ABC):
             Is: np.ndarray
     ) -> ModelResult:
         alpha_star = self.estimate_alpha(Xs, Ss, Is)
+        # alpha_star[alpha_star < 0] = 0
         average_simulation_result, all_simulation_results = self.run_monte_carlo_simulation(
             alpha_star=alpha_star
         )

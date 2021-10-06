@@ -126,7 +126,7 @@ class BaseSimulator(ABC):
             Is: np.ndarray
     ) -> ModelResult:
         alpha_star = self.estimate_alpha(Xs, Ss, Is)
-        # alpha_star[alpha_star < 0] = 0
+        alpha_star[alpha_star < 0] = 0
         average_simulation_result, all_simulation_results = self.run_monte_carlo_simulation(
             alpha_star=alpha_star
         )

@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
 from library.models.model_result import ModelResult
-
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
 class PlotGenerator:
     treatment_type_dict = {"LowConst": "Constant",
@@ -32,8 +33,8 @@ class PlotGenerator:
         else:
             subtitle_I = f"Infection: $I(t)$"
             subtitle_utility = "Utility: $-\\frac{I(t)^{1-\\gamma}}{1-\\gamma}$"
-        axes[0, 0].set_title(subtitle_I)
-        axes[0, 1].set_title(subtitle_utility)
+        axes[0, 0].set_title(subtitle_I, pad=15)
+        axes[0, 1].set_title(subtitle_utility, pad=15)
         for i, gamma in enumerate(gammas):
             results_dict = gamma_to_results[gamma]
             result_keys = ['Optimal Control', 'Full Control', 'No Control']
@@ -65,6 +66,22 @@ class PlotGenerator:
             yfmt.set_powerlimits((0, 0))
             axes[i, 1].yaxis.set_major_formatter(yfmt)
 
+            is_zoom_out_plots=False
+            if is_zoom_out_plots:
+                axins = zoomed_inset_axes(axes[i, 1], 2, loc='right',borderpad=-9)  # zoom = 2
+                for result_key in result_keys:
+                    model_result: ModelResult = results_dict[result_key]
+                    axins.plot(model_result.average_simulation_result.Utility,
+                        label=result_key,
+                        linestyle=result_key_to_line_style[result_key])
+                # bottom, top = axins.get_ylim()
+                axins.set_xlim(80, 100)
+                # axins.set_ylim(bottom, top-(top-bottom)/2)
+                plt.xticks(visible=False)
+                plt.yticks(visible=False)
+                mark_inset(axes[i, 1], axins, loc1=2, loc2=4, fc="none", ec="0.5")
+                plt.draw()
+
             subtitle_I = None
             subtitle_utility = None
 
@@ -72,7 +89,11 @@ class PlotGenerator:
 
         # Format plot
         fig.set_size_inches(8, 10.5)
-        fig.subplots_adjust(left=0.1, bottom=0.13, right=0.95, top=0.92, wspace=0.3, hspace=0.6)
+        if is_zoom_out_plots:
+            fig.subplots_adjust(left=0.1, bottom=0.13, right=0.8, top=0.92, wspace=0.2, hspace=1.3)
+        else:
+            fig.subplots_adjust(left=0.1, bottom=0.13, right=0.95, top=0.92, wspace=0.3, hspace=0.6)
+
         fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
         plt.suptitle(f'{infection_type} Infection Regime with {treatment_type} Treatment', x=0.5)
         plt.show()

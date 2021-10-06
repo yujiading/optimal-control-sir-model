@@ -76,7 +76,7 @@ class Driver:
                 simulator = simulator_class(gamma=gamma, run_config=self.run_config)
 
                 # simulate for no control
-                alpha_star = np.array([0.0001] * len(Xs))
+                alpha_star = np.array([0] * len(Xs))
                 no_control_simulation_result, _ = simulator.run_monte_carlo_simulation(alpha_star=alpha_star)
                 no_control_model_result = ModelResult(
                     model_type=self.run_config.model,
@@ -114,6 +114,19 @@ class Driver:
                                      all_gamma_to_results]
                 gamma_to_result[result_key] = ModelResult.average_model_results(all_model_results)
             average_gamma_to_results[gamma] = gamma_to_result
+        import pickle
+
+        params = (
+            self.run_config.model,
+            self.run_config.gammas,
+            self.run_config.n_steps_simulated_data_generation,
+            self.run_config.n_trials_simulated_data_generation,
+            self.run_config.n_trials_monte_carlo_simulation,
+        )
+        params_str = '_'.join([str(param) for param in params])
+        filehandler = open(f"data/average_gamma_to_results_{params_str}.pickle", "wb")
+        pickle.dump(average_gamma_to_results, filehandler)
+        filehandler.close()
 
         # plot
         plot_generator = PlotGenerator()

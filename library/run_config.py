@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from typing import List
-from models.model_mapper import ModelTypes
-from models import model_params
+from library.models.model_mapper import ModelTypes
+from library.models import model_params
 
 
 @dataclass
 class RunConfig:
-    model: str = ModelTypes.LowOU
-    gammas: List = field(default_factory=lambda: [-1, -2, -3, -4, -5,-6,-7,-8])
+    model: str = ModelTypes.LowConst
+    gammas: List = field(default_factory=lambda: [-0.5,-1,-2,-3,-4,-5])
     # gammas: List = field(default_factory=lambda: [-1, -2])
     T = 1
     # X0 = model_params.X0
@@ -21,8 +21,8 @@ class RunConfig:
     is_include_full_control: bool = True
     is_include_no_control: bool = True
     is_simulation: bool = True
-    n_trials_simulated_data_generation: int = 10
     n_steps_simulated_data_generation: int = 100
+    n_trials_simulated_data_generation: int = 100   #10
     # seed: int = None  # Set to None to turn off seeding
-    n_trials_monte_carlo_simulation: int = 1000
+    n_trials_monte_carlo_simulation: int = 10000  #10000
     # seed: int = 0  # Set to None to turn off seeding

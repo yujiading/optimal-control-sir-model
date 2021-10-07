@@ -1,5 +1,5 @@
 from typing import Type
-
+import pickle
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -28,28 +28,6 @@ class Driver:
             "ModerateConst": ModerateConstSimulator,
             "ModerateOU": ModerateOUSimulator
         }
-
-    def get_I_star_utility_dict(self, gamma, Is, Xs, Ss):
-        I = pd.DataFrame()
-        Utility = pd.DataFrame()
-        if self.run_config.is_include_optimal_control:
-            alpha_star = self.get_alpha_star(gamma=gamma, Xs=Xs, Ss=Ss, Is=Is)
-            # todo: add back alpha rate range
-            # if type(alpha_star) is np.ndarray:
-            #     alpha_star[alpha_star < 0] = model_params.eps
-            #     alpha_star[alpha_star > 1] = 1
-            I_optimal = self.get_I_star(alpha_star=alpha_star, Xs=Xs, Ss=Ss)
-            I[f'Optimal Control'] = I_optimal
-            Utility[f'Optimal Control'] = Driver.utility(I=I_optimal, gamma=gamma)
-        if self.run_config.is_include_full_control:
-            I_full = self.get_I_star(alpha_star=1, Xs=Xs, Ss=Ss)
-            I[f'Full Control'] = I_full
-            Utility[f'Full Control'] = Driver.utility(I=I_full, gamma=gamma)
-        if self.run_config.is_include_no_control:
-            I_no = self.get_I_star(alpha_star=model_params.eps, Xs=Xs, Ss=Ss)
-            I['No Control'] = I_no
-            Utility[f'No Control'] = Driver.utility(I=I_no, gamma=gamma)
-        return I, Utility
 
     def run(self):
         all_gamma_to_results = []
@@ -114,19 +92,20 @@ class Driver:
                                      all_gamma_to_results]
                 gamma_to_result[result_key] = ModelResult.average_model_results(all_model_results)
             average_gamma_to_results[gamma] = gamma_to_result
-        import pickle
 
-        params = (
-            self.run_config.model,
-            self.run_config.gammas,
-            self.run_config.n_steps_simulated_data_generation,
-            self.run_config.n_trials_simulated_data_generation,
-            self.run_config.n_trials_monte_carlo_simulation,
-        )
-        params_str = '_'.join([str(param) for param in params])
-        filehandler = open(f"data/average_gamma_to_results_{params_str}.pickle", "wb")
-        pickle.dump(average_gamma_to_results, filehandler)
-        filehandler.close()
+        is_save=True
+        if is_save:
+            params = (
+                self.run_config.model,
+                self.run_config.gammas,
+                self.run_config.n_steps_simulated_data_generation,
+                self.run_config.n_trials_simulated_data_generation,
+                self.run_config.n_trials_monte_carlo_simulation,
+            )
+            params_str = '_'.join([str(param) for param in params])
+            filehandler = open(f"../data/average_gamma_to_results_{params_str}.pickle", "wb")
+            pickle.dump(average_gamma_to_results, filehandler)
+            filehandler.close()
 
         # plot
         plot_generator = PlotGenerator()

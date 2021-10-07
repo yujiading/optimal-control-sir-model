@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
+from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 
 from library.models.model_result import ModelResult
-from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+
 
 class PlotGenerator:
     treatment_type_dict = {"LowConst": "Constant",
@@ -35,6 +36,9 @@ class PlotGenerator:
             subtitle_utility = "Utility: $-\\frac{I(t)^{1-\\gamma}}{1-\\gamma}$"
         axes[0, 0].set_title(subtitle_I, pad=15)
         axes[0, 1].set_title(subtitle_utility, pad=15)
+
+        is_zoom_out_plots = False
+
         for i, gamma in enumerate(gammas):
             results_dict = gamma_to_results[gamma]
             result_keys = ['Optimal Control', 'Full Control', 'No Control']
@@ -66,17 +70,16 @@ class PlotGenerator:
             yfmt.set_powerlimits((0, 0))
             axes[i, 1].yaxis.set_major_formatter(yfmt)
 
-            is_zoom_out_plots=True
             if is_zoom_out_plots:
-                axins = zoomed_inset_axes(axes[i, 1], 2, loc='right',borderpad=-9)  # zoom = 2
+                axins = zoomed_inset_axes(axes[i, 1], 2, loc='right', borderpad=-9)  # zoom = 2
                 for result_key in result_keys:
                     model_result: ModelResult = results_dict[result_key]
                     axins.plot(model_result.average_simulation_result.Utility,
-                        label=result_key,
-                        linestyle=result_key_to_line_style[result_key])
+                               label=result_key,
+                               linestyle=result_key_to_line_style[result_key])
                 bottom, top = axins.get_ylim()
                 axins.set_xlim(80, 100)
-                axins.set_ylim(bottom, top-(top-bottom)/2)
+                axins.set_ylim(bottom, top - (top - bottom) / 2)
                 plt.xticks(visible=False)
                 plt.yticks(visible=False)
                 mark_inset(axes[i, 1], axins, loc1=2, loc2=4, fc="none", ec="0.5")

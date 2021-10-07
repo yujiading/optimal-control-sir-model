@@ -14,7 +14,7 @@ def test_plot_saved_data():
         run_config.n_trials_monte_carlo_simulation,
     )
     params_str = '_'.join([str(param) for param in params])
-    filehandler = open(cur_dir_path / f"data/average_gamma_to_results_{params_str}.pickle", "rb")
+    filehandler = open(cur_dir_path / f"../data/average_gamma_to_results_{params_str}.pickle", "rb")
     average_gamma_to_results = pickle.load(filehandler)
     filehandler.close()
 

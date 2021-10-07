@@ -66,7 +66,7 @@ class PlotGenerator:
             yfmt.set_powerlimits((0, 0))
             axes[i, 1].yaxis.set_major_formatter(yfmt)
 
-            is_zoom_out_plots=False
+            is_zoom_out_plots=True
             if is_zoom_out_plots:
                 axins = zoomed_inset_axes(axes[i, 1], 2, loc='right',borderpad=-9)  # zoom = 2
                 for result_key in result_keys:
@@ -74,9 +74,9 @@ class PlotGenerator:
                     axins.plot(model_result.average_simulation_result.Utility,
                         label=result_key,
                         linestyle=result_key_to_line_style[result_key])
-                # bottom, top = axins.get_ylim()
+                bottom, top = axins.get_ylim()
                 axins.set_xlim(80, 100)
-                # axins.set_ylim(bottom, top-(top-bottom)/2)
+                axins.set_ylim(bottom, top-(top-bottom)/2)
                 plt.xticks(visible=False)
                 plt.yticks(visible=False)
                 mark_inset(axes[i, 1], axins, loc1=2, loc2=4, fc="none", ec="0.5")
@@ -90,7 +90,7 @@ class PlotGenerator:
         # Format plot
         fig.set_size_inches(8, 10.5)
         if is_zoom_out_plots:
-            fig.subplots_adjust(left=0.1, bottom=0.13, right=0.8, top=0.92, wspace=0.2, hspace=1.3)
+            fig.subplots_adjust(left=0.1, bottom=0.13, right=0.8, top=0.92, wspace=0.3, hspace=0.6)
         else:
             fig.subplots_adjust(left=0.1, bottom=0.13, right=0.95, top=0.92, wspace=0.3, hspace=0.6)
 

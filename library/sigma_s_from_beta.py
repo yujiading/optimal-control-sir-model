@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
 
+import library.models.model_params
 from library import conf
 
 
@@ -30,7 +31,7 @@ class SigmaSFromBeta:
         S_series = [self.S_0]
         for i in range(self.trial_length):
             last_S = S_series[-1]
-            new_S = last_S - (conf.beta + beta_change) * last_S * conf.Is[i] * conf.dt
+            new_S = last_S - (library.models.model_params.beta + beta_change) * last_S * conf.Is[i] * library.models.model_params.dt
             S_series.append(new_S)
         return S_series
 

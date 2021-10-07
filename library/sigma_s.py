@@ -1,10 +1,12 @@
 import math
 
 import numpy as np
+
+import library.models.model_params
 from library import conf
 
 
-class SigmaS:
+class SigmaSDoubleSum:
     def __init__(self, scenarios: int = 10000):
         self.scenarios = scenarios
     @property
@@ -15,19 +17,44 @@ class SigmaS:
         """
 
         trial_length = len(conf.Is)
-        dB = np.random.randn(trial_length) * math.sqrt(conf.dt)
+        dB = np.random.randn(trial_length) * math.sqrt(library.models.model_params.dt)
         sigma_s_lst = []
+        sigma_s_square_lst = []
         for i in range(trial_length-1):
-            new_sigma_s = conf.Ss[i+1]-conf.Ss[i]+ conf.beta * conf.Ss[i] * conf.Is[i] * conf.dt
+            new_sigma_s = conf.Ss[i+1] - conf.Ss[i] + library.models.model_params.beta * conf.Ss[i] * conf.Is[i] * library.models.model_params.dt
             new_sigma_s = new_sigma_s/math.sqrt(conf.Ss[i] * conf.Is[i])/dB[i]
+            new_sigma_s_square = new_sigma_s ** 2
+            sigma_s_square_lst.append(new_sigma_s_square)
             sigma_s_lst.append(new_sigma_s)
-        return sigma_s_lst
+        return sigma_s_lst, sigma_s_square_lst
 
     @property
     def simulate_all_scenarios(self):
-        sigma_s_all_lst = []
+        sigma_s_lst = []
+        sigma_s_square_lst=[]
         for scenario in range(self.scenarios):
-            sigma_s_lst = self.simulate_one_scenario
-            sigma_s_lst_ = sum(sigma_s_lst)/len(sigma_s_lst)
-            sigma_s_all_lst.append(sigma_s_lst_)
-        return sigma_s_all_lst
+            sigma_s_lst_, sigma_s_square_lst_ = self.simulate_one_scenario
+            sigma_s_ = sum(sigma_s_lst_)/len(sigma_s_lst_)
+            sigma_s_lst.append(sigma_s_)
+
+            sigma_s_square_ = sum(sigma_s_square_lst_) / len(sigma_s_square_lst_)
+            sigma_s_square_lst.append(sigma_s_square_)
+        return sigma_s_lst, sigma_s_square_lst
+
+
+class SigmaSSquareConst:
+
+    @property
+    def sigma_s(self):
+        """
+        sigma_s^2 = mean (S(t+dt) - S(t) + beta * S(t) * I(t) * dt)/sqrt(S(t)I(t)dt)
+
+        """
+        trial_length = len(conf.Is)
+        sigma_s_square_lst = []
+        for i in range(trial_length - 1):
+            new_sigma_s = conf.Ss[i + 1] - conf.Ss[i] + library.models.model_params.beta * conf.Ss[i] * conf.Is[i] * library.models.model_params.dt
+            new_sigma_s = new_sigma_s / math.sqrt(conf.Ss[i] * conf.Is[i] * library.models.model_params.dt)
+            new_sigma_s_square = new_sigma_s**2
+            sigma_s_square_lst.append(new_sigma_s_square)
+        return math.sqrt(np.sum(sigma_s_square_lst)/trial_length)

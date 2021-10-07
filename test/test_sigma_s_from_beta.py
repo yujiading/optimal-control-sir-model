@@ -28,5 +28,5 @@ def test_sigma_s_one_estimate():
     for i in range(1, sigma_s.trial_length + 1):
         sigma_s_ = sigma_s.sigma_s_one_estimate(S_all_series=S_all_series, trail_index=i, percent=0.67)
         sigma_s_lst.append(sigma_s_)
-        print(sigma_s_)
+        # print(sigma_s_)
     print(sum(sigma_s_lst) / len(sigma_s_lst))

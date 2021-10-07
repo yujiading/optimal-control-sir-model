@@ -63,8 +63,8 @@ class AlphaStarModerateOU(BaseModelAlphaStar):
 
         logzs = np.zeros(length)
         logzs[0] = math.log(Z_0)
-        dB1 = IFunctions.get_d_B1(length=length)
-        dB2 = IFunctions.d_B2(length=length)
+        dB1 = IFunctions.get_d_B1_from_data(Is=Is, Ss=Ss)
+        dB2 = IFunctions.get_d_B2_from_data(S=Ss, X=X, Is=Is)
         for i in range(length - 1):
             if isinstance(c, np.ndarray):
                 c = c[i]
@@ -79,10 +79,10 @@ class AlphaStarModerateOU(BaseModelAlphaStar):
         alpha1 = []
         for i in range(length):
             g = gfunctions.g(t=library.models.model_params.dt * i, X_t=Xs[i])
-            a1 = zs[i] ** (1 / self.gamma) * Ss[i] / library.models.model_params.sigma / HFunctions.H(i=1,
-                                                                                                      gamma=self.gamma,
-                                                                                                      tau=self.T - library.models.model_params.dt * i,
-                                                                                                      X_t=Xs[i])
+            a1 = zs[i] ** (1 / self.gamma) * Ss[i] / library.models.model_params.sigma \
+                 / HFunctions.H(i=1, gamma=self.gamma,
+                                tau=self.T - library.models.model_params.dt * i,
+                                X_t=Xs[i])
             a2 = g * Xs[
                 i] / self.gamma - library.models.model_params.sigma_x * gfunctions.d_g_d_X(
                 t=library.models.model_params.dt * i, X_t=Xs[

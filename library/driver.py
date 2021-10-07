@@ -37,7 +37,7 @@ class Driver:
                 simulator_class: Type[BaseSimulator] = self.simulation_dict[self.run_config.model]
                 simulator = simulator_class(gamma=-1, run_config=self.run_config)
                 simulation_result = simulator.simulate_one_trial(alpha_star=np.array(
-                    [self.run_config.alpha_fix] * self.run_config.n_steps_simulated_data_generation))
+                    [model_params.alpha_fix] * self.run_config.n_steps_simulated_data_generation))
                 Xs = simulation_result.Xs
                 Is = simulation_result.Is
                 Ss = simulation_result.Ss
@@ -93,7 +93,7 @@ class Driver:
                 gamma_to_result[result_key] = ModelResult.average_model_results(all_model_results)
             average_gamma_to_results[gamma] = gamma_to_result
 
-        is_save=True
+        is_save=False
         if is_save:
             params = (
                 self.run_config.model,

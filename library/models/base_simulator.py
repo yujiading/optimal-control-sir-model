@@ -79,9 +79,9 @@ class BaseSimulator(ABC):
             next_I = self.next_I(last_alpha=alpha_star[i], last_I=last_I, last_S=last_S, last_X=last_X,
                                  last_dB1=dB1[i - 1], last_dB2=dB2[i - 1])
             if next_I < 0:
-                next_I = 0
+                next_I = 0.0001
             if next_S is not None and next_S < 0:
-                next_S = 0
+                next_S = 0.0001
             Ss.append(next_S)
             Is.append(next_I)
             Xs.append(next_X)

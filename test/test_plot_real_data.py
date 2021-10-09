@@ -10,6 +10,7 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 
 from library.models.model_result import ModelResult
 
+
 def test_plot_real_data():
     fig, axes = plt.subplots(nrows=6, ncols=4)
     super_title = f"Infection $I(t)$ of One Scenario Real Data"
@@ -20,7 +21,7 @@ def test_plot_real_data():
                    'Moderate Infection\nRegime with\nOU Treatment'
                    ]
     for j, model in enumerate(model_classes):
-        run_config = RunConfig(model=eval(model))
+        run_config = RunConfig( model=eval(model))
 
         params = (
             run_config.model,
@@ -34,7 +35,7 @@ def test_plot_real_data():
         average_gamma_to_results = pickle.load(filehandler)
         filehandler.close()
 
-        axes[0,j].set_title(model_names[j], pad=15,fontsize= 10)
+        axes[0, j].set_title(model_names[j], pad=15, fontsize=10)
         gammas = run_config.gammas
         for i, gamma in enumerate(gammas):
             results_dict = average_gamma_to_results[gamma]
@@ -69,6 +70,7 @@ def test_plot_real_data():
         fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.025), loc='lower center')
         plt.suptitle(f'{super_title}', x=0.5)
     plt.show()
+
 
 class ScalarFormatterForceFormat(ScalarFormatter):
     pass

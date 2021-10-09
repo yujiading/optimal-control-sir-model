@@ -37,7 +37,7 @@ class PlotGenerator:
         axes[0, 0].set_title(subtitle_I, pad=15)
         axes[0, 1].set_title(subtitle_utility, pad=15)
 
-        is_zoom_out_plots = False
+        is_zoom_out_plots = True
 
         for i, gamma in enumerate(gammas):
             results_dict = gamma_to_results[gamma]

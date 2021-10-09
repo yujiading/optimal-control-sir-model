@@ -26,7 +26,7 @@ beta = 0.025  # constant transmission rate  1.5-3.5
 sigma_s = 2.17  # Volatility of the measurement of today’s susceptible rate
 dt = 0.001
 eps_low = 0.01  # 0.01, 0.1 # initial I
-eps_moderate = 0.01
+eps_moderate = 0.02
 
 sigma_x = sigma_k / sigma  # needs to be negative
 lambda_x = lambda_k

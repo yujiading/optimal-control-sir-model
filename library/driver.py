@@ -121,13 +121,13 @@ def run():
     """
     model takes values: 'LowConst', 'LowOU', 'ModerateConst', 'ModerateOU'
     """
-    run_config = RunConfig(model=ModelTypes.LowConst)
-    driver = Driver(run_config=run_config)
-    driver.run()
-
-    run_config = RunConfig(model=ModelTypes.LowOU)
-    driver = Driver(run_config=run_config)
-    driver.run()
+    # run_config = RunConfig(model=ModelTypes.LowConst)
+    # driver = Driver(run_config=run_config)
+    # driver.run()
+    #
+    # run_config = RunConfig(model=ModelTypes.LowOU)
+    # driver = Driver(run_config=run_config)
+    # driver.run()
 
     run_config = RunConfig(model=ModelTypes.ModerateConst)
     driver = Driver(run_config=run_config)

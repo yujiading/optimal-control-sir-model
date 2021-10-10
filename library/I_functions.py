@@ -24,13 +24,27 @@ class IFunctions:
         return -library.models.model_params.sigma_s
 
     @staticmethod
-    def get_d_B1(length):
-        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=length - 1)
+    def get_d_B1_from_data(Is, Ss):
+        dSs = Ss[1:] - Ss[:-1]
+        SI = Is[1:] * Ss[1:]
+        return (dSs + library.models.model_params.beta * SI * library.models.model_params.dt) \
+               / library.models.model_params.sigma_s / (SI) ** 0.5
 
     @staticmethod
-    def d_B2(length):
-        # np.random.seed(0)
-        return np.random.normal(loc=0, scale=math.sqrt(library.models.model_params.dt), size=length - 1)
+    def get_d_B2_from_data(S: Union[float, np.array], X: Union[float, np.array], Is):
+        dIs = Is[1:] - Is[:-1]
+        if isinstance(S, int):
+            item = 0
+        else:
+            item = -IFunctions.I_sigma_1() * (Is[:-1] * S[:-1]) ** 0.5 * IFunctions.get_d_B1_from_data(Is=Is, Ss=S)
+
+        Imu = IFunctions.I_mu(alpha=library.models.model_params.alpha_fix, S=S, X=X)
+        if isinstance(Imu, np.ndarray):
+            Imu = Imu[:-1]
+        top = dIs - Imu * Is[:-1] * library.models.model_params.dt + item
+        bottom = IFunctions.I_sigma_2(alpha=library.models.model_params.alpha_fix)
+        return top / bottom
+
     #
     # @staticmethod
     # def d_B1():

@@ -41,6 +41,7 @@ r = beta - mu
 X0 = (K0 + mu0 - mu1 - K1_0) / sigma
 eps = 0.01
 
+alpha_fix = 0.25
 
 
 

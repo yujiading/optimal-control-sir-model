@@ -11,12 +11,13 @@ class RunConfig:
     T = 1
     # X0 = model_params.X0
     X0 = -1
-    # I0 = model_params.eps
-    I0:float = 0.02   # low infection regime 0.01; moderate infection regime 0.02
+    I0 = model_params.eps_moderate
     S0 = 0.7
     alpha_fix = 0.25
     is_parallel:bool = False
     cpu: int = 8
+    is_infer_dB_from_data_for_calculate_alpha_star = True
+    is_infer_dB_from_data_for_monte_carlo = True
     is_include_optimal_control: bool = True
     is_include_full_control: bool = True
     is_include_no_control: bool = True

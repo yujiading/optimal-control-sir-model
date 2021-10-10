@@ -8,12 +8,18 @@ from library.H_functions import HFunctions, SimpleHFunctions
 from library.I_functions import IFunctions
 from library.g_functions import GFunctions
 from library.models import model_params
+from library.run_config import RunConfig
 
 
 class BaseModelAlphaStar(ABC):
-    def __init__(self, gamma, T=None):
+    def __init__(self, gamma, run_config: RunConfig, T=None):
         self.gamma = gamma
         self.T = T
+        self.run_config = run_config
+
+    @staticmethod
+    def _simulate_dB(length):
+        return np.random.normal(loc=0, scale=math.sqrt(model_params.dt), size=length)
 
     @abstractmethod
     def get_alpha_star(self, Xs, Ss, Is, length) -> np.ndarray:
@@ -54,8 +60,7 @@ class AlphaStarModerateOU(BaseModelAlphaStar):
                 X_t=Xs[i])) / self.gamma / library.models.model_params.sigma)
         return np.array(alpha0)
 
-    @staticmethod
-    def _get_Zs(X, Z_0, Ss, Is, length):
+    def _get_Zs(self, X, Z_0, Ss, Is, length):
         # d logZ = a dt+b dB1+c dB2
         a = -library.models.model_params.mu + X ** 2 / 2 + library.models.model_params.beta ** 2 * Ss * Is / 2 / library.models.model_params.sigma_s ** 2
         b = -library.models.model_params.beta * (Ss * Is) ** 0.5 / library.models.model_params.sigma_s
@@ -63,8 +68,12 @@ class AlphaStarModerateOU(BaseModelAlphaStar):
 
         logzs = np.zeros(length)
         logzs[0] = math.log(Z_0)
-        dB1 = IFunctions.get_d_B1_from_data(Is=Is, Ss=Ss)
-        dB2 = IFunctions.get_d_B2_from_data(S=Ss, X=X, Is=Is)
+        if self.run_config.is_infer_dB_from_data_for_calculate_alpha_star:
+            dB1 = IFunctions.get_d_B1_from_data(Is=Is, Ss=Ss)
+            dB2 = IFunctions.get_d_B2_from_data(S=Ss, X=X, Is=Is)
+        else:
+            dB1 = self._simulate_dB(length=length - 1)
+            dB2 = self._simulate_dB(length=length - 1)
         for i in range(length - 1):
             if isinstance(c, np.ndarray):
                 c = c[i]
@@ -99,7 +108,7 @@ class AlphaStarModerateOU(BaseModelAlphaStar):
         return alpha0 + library.models.model_params.eps_moderate * alpha1 + library.models.model_params.eps_moderate ** 2
 
 
-class AlphaStarModerateConst(BaseModelAlphaStar):
+class AlphaStarModerateConst(AlphaStarModerateOU):
     @property
     def _alpha0(self):
         return library.models.model_params.X_bar / self.gamma / library.models.model_params.sigma
@@ -114,7 +123,7 @@ class AlphaStarModerateConst(BaseModelAlphaStar):
 
     def _get_alpha1(self, Ss, Is, length):
         z_0 = 1 / SimpleHFunctions(gamma=self.gamma, i=1).h(tau=self.T)
-        zs = AlphaStarModerateOU._get_Zs(X=library.models.model_params.X_bar, Z_0=z_0, Ss=Ss, Is=Is, length=length)
+        zs = self._get_Zs(X=library.models.model_params.X_bar, Z_0=z_0, Ss=Ss, Is=Is, length=length)
         alpha1 = []
         for i in range(length):
             h_1 = SimpleHFunctions(gamma=self.gamma, i=1).h(tau=self.T - library.models.model_params.dt * i)
